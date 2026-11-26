@@ -1,278 +1,328 @@
-// AeroPilot V8 — boot, menu, main loop, camera, and the screenshot bot.
-// The loop feeds the engine ONLY through PilotInput (the human path):
-// keys and mouse move the same smoothed commands the autopilot test uses.
-
 (function () {
-  const data = window.AERO_DATA;
-  let renderer, scene, camera, world, engine, input, briefing, sound, hud;
-  let craft = null, craftSpec = data.FLEET[0];
-  let selectedRoute = 'island_hopper';
-  let flying = false, camMode = 0; // 0 chase, 1 nose
-  const camPos = new THREE.Vector3(-430, 30, 60);
-  let lastTouchFlag = false;
+  const canvas = document.getElementById('game-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
 
-  function $(id) { return document.getElementById(id); }
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 25000);
 
-  function buildMenu() {
-    const mlist = $('mission-list');
-    for (const id of Object.keys(data.ROUTES)) {
-      const r = data.ROUTES[id];
-      const btn = document.createElement('button');
-      btn.className = 'mission-btn' + (id === selectedRoute ? ' sel' : '');
-      btn.dataset.route = id;
-      const kindName = { full: 'FULL FLIGHT', rings: 'RING COURSE', landing: 'LANDING', free: 'SANDBOX' }[r.kind];
-      btn.innerHTML = '<span class="m-name">' + r.label.split('· ')[1] + '</span><span class="m-kind">' + kindName + '</span>';
-      btn.onclick = () => {
-        selectedRoute = id;
-        for (const b of mlist.children) b.classList.toggle('sel', b.dataset.route === id);
-        sound.ensure();
-      };
-      mlist.appendChild(btn);
-    }
-    const grid = $('craft-grid');
-    for (const spec of data.FLEET) {
-      const btn = document.createElement('button');
-      btn.className = 'craft-btn' + (spec.id === craftSpec.id ? ' sel' : '');
-      btn.dataset.craft = spec.id;
-      btn.innerHTML = '<span class="c-name">' + spec.label + '</span><span class="c-kind">' + spec.type + '</span><span class="c-desc">' + spec.blurb + '</span>';
-      btn.onclick = () => {
-        craftSpec = spec;
-        for (const b of grid.children) b.classList.toggle('sel', b.dataset.craft === spec.id);
-        sound.ensure();
-      };
-      grid.appendChild(btn);
-    }
-    $('btn-launch').onclick = () => { sound.ensure(); startMission(selectedRoute); };
-  }
+  const world = new WorldBuilder(scene);
+  const aircraft = new AircraftModel(scene);
+  const physics = new FlightPhysics();
+  const hud = new FlightHUD();
+  const missions = new MissionManager();
+  const audio = new FlightAudioEngine();
 
-  function mountCraft() {
-    if (craft) scene.remove(craft.group);
-    craft = window.buildCraft(craftSpec);
-    scene.add(craft.group);
-  }
+  // Game & Input State
+  let gameState = 'MENU'; // MENU | PLAYING | PAUSED | RESULT
+  let selectedMissionId = 'island_hopper';
+  let cameraMode = 0; // 0: Chase, 1: Cockpit, 2: Wide Scenic
+  const cameraLabels = ['CAM: CHASE', 'CAM: COCKPIT', 'CAM: ORBIT'];
+  let mouseYokeEnabled = false;
+  let mouseNormX = 0;
+  let mouseNormY = 0;
+  let orbitAngle = 0.4;
 
-  function startMission(routeId) {
-    engine.useSpec(craftSpec);
-    mountCraft();
-    input = new window.PilotInput();
-    wireInput();
-    briefing.start(routeId, world, engine);
-    input.throttle = engine.throttle;
-    input.brakes = engine.brakes;
-    craft.setGear(engine.gear);
-    $('menu').style.display = 'none';
-    $('hud').style.display = 'block';
-    $('banner').style.display = 'none';
-    flying = true;
-    camPos.set(engine.x - 30, engine.y + 9, engine.z + 14);
-  }
+  const keys = {};
 
-  function endToMenu() {
-    flying = false;
-    sound.silence();
-    $('menu').style.display = 'flex';
-    $('hud').style.display = 'none';
-    $('banner').style.display = 'none';
-  }
+  // UI Elements
+  const menuScreen = document.getElementById('menu-screen');
+  const hudEl = document.getElementById('hud');
+  const pauseScreen = document.getElementById('pause-screen');
+  const resultScreen = document.getElementById('result-screen');
+  const reticleEl = document.getElementById('mouse-reticle');
+  const reticleDot = document.getElementById('reticle-dot');
 
-  function showBanner(title, lines) {
-    $('banner-title').textContent = title;
-    $('banner-body').innerHTML = lines.join('<br>');
-    $('banner').style.display = 'flex';
-  }
-
-  let wired = false;
-  function wireInput() {
-    if (wired) return;
-    wired = true;
-    window.addEventListener('keydown', (ev) => {
-      if (!flying) return;
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(ev.code)) ev.preventDefault();
-      if (ev.code === 'KeyC') { camMode = (camMode + 1) % 2; return; }
-      if (ev.code === 'Escape') { endToMenu(); return; }
-      if (ev.code === 'KeyR' && (engine.crashed || briefing.done)) { startMission(briefing.routeId); return; }
-      input.keyDown(ev.code);
+  // Mission Selection Buttons
+  document.querySelectorAll('.mission-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mission-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedMissionId = btn.dataset.mission;
     });
-    window.addEventListener('keyup', (ev) => { if (flying) input.keyUp(ev.code); });
-    window.addEventListener('mousemove', (ev) => {
-      if (!flying || !input) return;
-      input.setMouse((ev.clientX / window.innerWidth) * 2 - 1, (ev.clientY / window.innerHeight) * 2 - 1);
+  });
+
+  // Aircraft Selection Buttons (added feature)
+  let selectedAircraftIndex = 0;
+  document.querySelectorAll('.craft-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.craft-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedAircraftIndex = parseInt(btn.dataset.craft, 10) || 0;
     });
-    $('banner').addEventListener('click', () => {
-      if (engine.crashed || briefing.done) startMission(briefing.routeId);
-    });
+  });
+
+  function startSelectedMission() {
+    const airStart = document.getElementById('opt-airstart').checked;
+    const soundOn = document.getElementById('opt-sound').checked;
+    audio.setEnabled(soundOn);
+    if (soundOn) audio.init();
+
+    // Aircraft selection (added feature): load the chosen craft's physics + livery.
+    const craft = window.applyAircraft(selectedAircraftIndex);
+    aircraft.setLivery(craft.bodyColor, craft.stripeColor);
+    aircraft.setScale(craft.scale);
+
+    missions.startMission(selectedMissionId, world, physics, airStart);
+    syncAircraftTransform();
+
+    menuScreen.classList.add('hidden');
+    pauseScreen.classList.add('hidden');
+    resultScreen.classList.add('hidden');
+    hudEl.classList.remove('hidden');
+    gameState = 'PLAYING';
   }
 
-  const _euler = new THREE.Euler();
-  const _quat = new THREE.Quaternion();
-  const _fwd = new THREE.Vector3();
-  const _want = new THREE.Vector3();
-  const _look = new THREE.Vector3();
+  function showResult(success) {
+    gameState = 'RESULT';
+    hudEl.classList.add('hidden');
+    resultScreen.classList.remove('hidden');
 
-  function syncVisual(dt) {
-    craft.group.position.set(engine.x, engine.y + 0.28, engine.z);
-    _euler.set(engine.pitch, -engine.hdg, -engine.bank, 'YXZ');
-    _quat.setFromEuler(_euler);
-    craft.group.quaternion.copy(_quat);
-    craft.setGear(engine.gear);
-    craft.spin(dt, engine.throttle);
+    const badge = document.getElementById('result-badge');
+    const title = document.getElementById('result-title');
+    const desc = document.getElementById('result-desc');
 
-    _fwd.set(Math.sin(engine.hdg), 0, -Math.cos(engine.hdg));
-    if (camMode === 1) {
-      camera.position.set(engine.x + _fwd.x * 6, engine.y + 2.2, engine.z + _fwd.z * 6);
-      _look.copy(camera.position).addScaledVector(_fwd, 60);
-      camera.lookAt(_look);
+    if (success) {
+      badge.textContent = 'MISSION ACCOMPLISHED';
+      badge.className = 'badge';
+      title.textContent = 'EXCELLENT FLYING, CAPTAIN!';
+      desc.textContent = 'All objectives completed safely.';
     } else {
-      _want.set(engine.x - _fwd.x * 27, engine.y + 8.5, engine.z - _fwd.z * 27);
-      camPos.lerp(_want, Math.min(1, dt * 3.2));
-      camera.position.copy(camPos);
-      _look.set(engine.x + _fwd.x * 34, engine.y + 1.5, engine.z + _fwd.z * 34);
-      camera.lookAt(_look);
+      badge.textContent = 'AIRCRAFT DAMAGED';
+      badge.className = 'badge danger';
+      title.textContent = 'FLIGHT TERMINATED';
+      desc.textContent = physics.crashReason || 'Aircraft exceeded structural limits.';
+    }
+
+    const mins = String(Math.floor(missions.elapsedTime / 60)).padStart(2, '0');
+    const secs = String(Math.floor(missions.elapsedTime % 60)).padStart(2, '0');
+    document.getElementById('stat-time').textContent = `${mins}:${secs}`;
+    document.getElementById('stat-vsi').textContent = physics.lastTouchdownVsiFpm
+      ? `${physics.lastTouchdownVsiFpm} FPM`
+      : 'N/A';
+    document.getElementById('stat-rings').textContent = `${missions.ringsPassed} / ${missions.totalRings}`;
+    document.getElementById('stat-score').textContent = success ? missions.score.toLocaleString() : '0';
+  }
+
+  function togglePause() {
+    if (gameState === 'PLAYING') {
+      gameState = 'PAUSED';
+      pauseScreen.classList.remove('hidden');
+    } else if (gameState === 'PAUSED') {
+      gameState = 'PLAYING';
+      pauseScreen.classList.add('hidden');
     }
   }
 
-  let prev = performance.now();
-  function loop(now) {
-    requestAnimationFrame(loop);
-    let dt = Math.min(0.05, (now - prev) / 1000);
-    prev = now;
-    if (dt <= 0) dt = 0.016;
+  function cycleCamera() {
+    cameraMode = (cameraMode + 1) % 3;
+    document.getElementById('btn-cam').textContent = cameraLabels[cameraMode];
+    aircraft.root.visible = cameraMode !== 1;
+  }
 
-    if (flying) {
-      const cmd = input.update(dt);
-      for (const t of input.takeToggles()) {
-        if (t === 'gear') engine.gear = !engine.gear;
-        if (t === 'flaps') engine.flaps = (engine.flaps + 1) % 3;
+  function toggleMouseYoke() {
+    mouseYokeEnabled = !mouseYokeEnabled;
+    document.getElementById('btn-mouse').textContent = mouseYokeEnabled ? 'MOUSE: ON' : 'MOUSE: OFF';
+    reticleEl.classList.toggle('hidden', !mouseYokeEnabled);
+    mouseNormX = 0;
+    mouseNormY = 0;
+  }
+
+  // Button Event Listeners
+  document.getElementById('btn-launch').addEventListener('click', startSelectedMission);
+  document.getElementById('btn-resume').addEventListener('click', togglePause);
+  document.getElementById('btn-restart-pause').addEventListener('click', startSelectedMission);
+  document.getElementById('btn-retry').addEventListener('click', startSelectedMission);
+
+  function returnToMenu() {
+    gameState = 'MENU';
+    hudEl.classList.add('hidden');
+    pauseScreen.classList.add('hidden');
+    resultScreen.classList.add('hidden');
+    menuScreen.classList.remove('hidden');
+    aircraft.root.visible = true;
+  }
+
+  document.getElementById('btn-menu-pause').addEventListener('click', returnToMenu);
+  document.getElementById('btn-menu-end').addEventListener('click', returnToMenu);
+  document.getElementById('btn-cam').addEventListener('click', cycleCamera);
+  document.getElementById('btn-mouse').addEventListener('click', toggleMouseYoke);
+  document.getElementById('btn-pause').addEventListener('click', togglePause);
+
+  // Keyboard Listeners
+  window.addEventListener('keydown', (e) => {
+    keys[e.code] = true;
+    if (gameState === 'PLAYING') {
+      if (e.code === 'KeyG') {
+        physics.gearDown = !physics.gearDown;
+        audio.playGearToggle();
+      } else if (e.code === 'KeyF') {
+        physics.flaps = (physics.flaps + 1) % 3;
+      } else if (e.code === 'KeyB') {
+        physics.brakes = !physics.brakes;
+      } else if (e.code === 'KeyC') {
+        cycleCamera();
+      } else if (e.code === 'KeyM') {
+        toggleMouseYoke();
+      } else if (e.code === 'KeyP' || e.code === 'Escape') {
+        togglePause();
       }
-      engine.inPitch = cmd.pitch;
-      engine.inRoll = cmd.roll;
-      engine.inYaw = cmd.yaw;
-      engine.throttle = cmd.throttle;
-      engine.brakes = cmd.brakes;
-      const wind = briefing.route ? briefing.route.wind : { x: 0, z: 0 };
-      engine.step(dt, world, wind);
-      briefing.update(dt, engine, world, sound);
-      sound.setEngine(engine.throttle, engine.iasKt());
-      sound.warn(engine.stalling);
-      if (engine.justTouched && !lastTouchFlag) sound.touchdown(engine.touchVsiFpm < -380);
-      lastTouchFlag = engine.justTouched;
-      syncVisual(dt);
-      hud.update(engine, briefing, input);
-      if (engine.crashed) {
-        flying = false;
-        sound.silence();
-        showBanner('FLIGHT ENDED', [engine.crashWhy, '', 'Click or press R to fly it again · Esc for the menu']);
-      } else if (briefing.done) {
-        flying = false;
-        sound.silence();
-        showBanner('MISSION COMPLETE', [
-          briefing.route.label,
-          'Time ' + $('v-clock').textContent + ' · Score ' + briefing.score.toLocaleString('en-US'),
-          'Touchdown ' + engine.touchVsiFpm + ' FPM',
-          '', 'Click or press R to fly again · Esc for the menu'
-        ]);
-      }
+    } else if (gameState === 'PAUSED' && (e.code === 'KeyP' || e.code === 'Escape')) {
+      togglePause();
     }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    keys[e.code] = false;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!mouseYokeEnabled || gameState !== 'PLAYING') return;
+    mouseNormX = THREE.MathUtils.clamp(((e.clientX / window.innerWidth) - 0.5) * 2.4, -1, 1);
+    mouseNormY = THREE.MathUtils.clamp(((e.clientY / window.innerHeight) - 0.5) * 2.4, -1, 1);
+    reticleDot.style.transform = `translate(calc(-50% + ${mouseNormX * 60}px), calc(-50% + ${mouseNormY * 60}px))`;
+  });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  function processInputs(dt) {
+    // Throttle W / S
+    if (keys['KeyW']) physics.throttle = Math.min(1, physics.throttle + 0.55 * dt);
+    if (keys['KeyS']) physics.throttle = Math.max(0, physics.throttle - 0.55 * dt);
+
+    // Auto-release brakes when advancing throttle above 35% on takeoff
+    if (physics.onGround && physics.throttle > 0.35 && keys['KeyW']) {
+      physics.brakes = false;
+    }
+
+    // Pitch (ArrowUp = nose down / dive, ArrowDown = nose up / pull back)
+    let pitch = 0;
+    if (keys['ArrowDown']) pitch += 1;
+    if (keys['ArrowUp']) pitch -= 1;
+    if (mouseYokeEnabled) pitch += mouseNormY;
+
+    // Roll (ArrowLeft / ArrowRight)
+    let roll = 0;
+    if (keys['ArrowRight']) roll += 1;
+    if (keys['ArrowLeft']) roll -= 1;
+    if (mouseYokeEnabled) roll += mouseNormX;
+
+    // Yaw (A / D)
+    let yaw = 0;
+    if (keys['KeyD']) yaw += 1;
+    if (keys['KeyA']) yaw -= 1;
+
+    physics.pitchInput = THREE.MathUtils.clamp(pitch, -1, 1);
+    physics.rollInput = THREE.MathUtils.clamp(roll, -1, 1);
+    physics.yawInput = THREE.MathUtils.clamp(yaw, -1, 1);
+  }
+
+  function syncAircraftTransform() {
+    aircraft.root.position.copy(physics.position);
+    aircraft.root.quaternion.copy(physics.quaternion);
+  }
+
+  function updateCamera(dt) {
+    if (gameState === 'MENU') {
+      // Scenic slow orbit around Emerald Bay Airport
+      orbitAngle += dt * 0.14;
+      camera.position.set(
+        -220 + Math.cos(orbitAngle) * 160,
+        48,
+        Math.sin(orbitAngle) * 160
+      );
+      camera.lookAt(-350, 10, 0);
+      return;
+    }
+
+    if (cameraMode === 0) {
+      // Smooth Chase Camera
+      const offset = new THREE.Vector3(0, 6.2, 24).applyQuaternion(physics.quaternion);
+      const desiredPos = physics.position.clone().add(offset);
+      camera.position.lerp(desiredPos, Math.min(1, dt * 8));
+
+      const lookAhead = new THREE.Vector3(0, 1.5, -35).applyQuaternion(physics.quaternion);
+      camera.lookAt(physics.position.clone().add(lookAhead));
+    } else if (cameraMode === 1) {
+      // First-Person Cockpit View
+      const eyeOffset = new THREE.Vector3(0, 1.25, -7.2).applyQuaternion(physics.quaternion);
+      camera.position.copy(physics.position).add(eyeOffset);
+      const lookTarget = new THREE.Vector3(0, 0.8, -60).applyQuaternion(physics.quaternion);
+      camera.lookAt(physics.position.clone().add(lookTarget));
+    } else {
+      // Wide Cinematic Side/Rear Orbit
+      orbitAngle += dt * 0.25;
+      const offset = new THREE.Vector3(Math.cos(orbitAngle) * 34, 10, Math.sin(orbitAngle) * 34);
+      camera.position.copy(physics.position).add(offset);
+      camera.lookAt(physics.position);
+    }
+  }
+
+  // Expose debug helper for automated screenshot & playtest scripts
+  window.__GAME_DEBUG__ = {
+    startMission: (id, airStart = false) => {
+      selectedMissionId = id || 'island_hopper';
+      document.getElementById('opt-airstart').checked = airStart;
+      startSelectedMission();
+    },
+    getState: () => ({
+      gameState,
+      airspeedKnots: Math.round(physics.getAirspeedKnots()),
+      altitudeFeet: Math.round(physics.getAltitudeFeet()),
+      ringsPassed: missions.ringsPassed,
+      completed: missions.completed,
+      crashed: physics.crashed
+    })
+  };
+
+  let lastTime = performance.now();
+  function animate(now) {
+    requestAnimationFrame(animate);
+    const dt = Math.min(0.05, (now - lastTime) / 1000);
+    lastTime = now;
+
     world.update(dt);
+
+    if (gameState === 'PLAYING') {
+      processInputs(dt);
+      const cw = missions.currentMission
+        ? { x: missions.currentMission.crosswindX, z: missions.currentMission.crosswindZ }
+        : { x: 0, z: 0 };
+
+      physics.step(dt, world, audio, cw);
+      syncAircraftTransform();
+      aircraft.updateVisuals(dt, physics);
+      missions.update(dt, physics, world, audio);
+
+      const targetPos = missions.getActiveTargetPosition();
+      hud.update(physics, world, targetPos);
+      audio.update(physics.throttle, physics.getAirspeedKnots(), false);
+
+      if (physics.isStalling || (!physics.onGround && physics.getAltitudeFeet() < 350 && physics.getVerticalSpeedFpm() < -700)) {
+        audio.playWarning();
+      }
+
+      if (physics.crashed) {
+        audio.update(0, 0, true);
+        showResult(false);
+      } else if (missions.completed) {
+        audio.update(0, 0, true);
+        showResult(true);
+      }
+    } else {
+      syncAircraftTransform();
+      audio.update(0, 0, true);
+    }
+
+    updateCamera(dt);
     renderer.render(scene, camera);
   }
 
-  function boot() {
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-    $('stage').appendChild(renderer.domElement);
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 40000);
-    camera.position.copy(camPos);
-    world = new window.AeroWorld(scene);
-    engine = new window.AeroEngine();
-    engine.useSpec(craftSpec);
-    briefing = new window.Briefing();
-    sound = new window.SoundFX();
-    input = new window.PilotInput();
-    hud = new window.Cockpit();
-    mountCraft();
-    engine.reset({ x: -390, y: 4 + craftSpec.gearM, z: 0, hdg: 90 });
-    buildMenu();
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-    window.__V8__ = { engine, world, briefing, startMission, get input() { return input; } };
-    maybeShot();
-    requestAnimationFrame(loop);
-  }
-
-  // Screenshot staging: ?shot=<route>&craft=<id>&ff=<seconds> starts the
-  // mission and pre-flies it through the same PilotInput a player uses
-  // (headless renderers advance game time too slowly to stage live), then
-  // keeps flying on the render loop.
-  function maybeShot() {
-    const q = new URLSearchParams(window.location.search);
-    const routeId = q.get('shot');
-    if (!routeId || !data.ROUTES[routeId]) return;
-    const cid = q.get('craft');
-    if (cid) { const s = data.FLEET.find(f => f.id === cid); if (s) craftSpec = s; }
-    startMission(routeId);
-    input.mouseOn = false;
-    if (engine.onGround) input.keyDown('KeyB'); // brakes off
-    input.keys.add('KeyW');
-
-    function botTick() {
-      if (briefing.route && briefing.route.kind === 'landing') {
-        // Approach profile: power back, gentle descent on the line.
-        input.keys.delete('KeyW');
-        if (engine.throttle > 0.42) input.keys.add('KeyS'); else input.keys.delete('KeyS');
-        if (engine.pitchDeg() > -1) { input.keys.add('ArrowUp'); input.keys.delete('ArrowDown'); }
-        else if (engine.pitchDeg() < -5) { input.keys.add('ArrowDown'); input.keys.delete('ArrowUp'); }
-        else { input.keys.delete('ArrowDown'); input.keys.delete('ArrowUp'); }
-        return;
-      }
-      if (engine.onGround) {
-        if (engine.iasKt() > engine.spec.rotateKt - 5) input.keys.add('ArrowDown');
-      } else {
-        // Steer for the active ring/target the way the verification
-        // autopilot does — bank toward the bearing, pitch to its height.
-        const tgt = briefing.targetPos();
-        if (tgt) {
-          const bearing = Math.atan2(tgt.x - engine.x, -(tgt.z - engine.z)) * 180 / Math.PI;
-          let hdgErr = bearing - engine.hdgDeg();
-          while (hdgErr > 180) hdgErr -= 360;
-          while (hdgErr < -180) hdgErr += 360;
-          const wantBank = Math.max(-25, Math.min(25, hdgErr * 1.1));
-          if (engine.bankDeg() < wantBank - 2) { input.keys.add('ArrowRight'); input.keys.delete('ArrowLeft'); }
-          else if (engine.bankDeg() > wantBank + 2) { input.keys.add('ArrowLeft'); input.keys.delete('ArrowRight'); }
-          else { input.keys.delete('ArrowLeft'); input.keys.delete('ArrowRight'); }
-          const wantPitch = Math.max(-8, Math.min(11, (tgt.y - engine.y) * 0.08));
-          if (engine.pitchDeg() < wantPitch - 0.8) { input.keys.add('ArrowDown'); input.keys.delete('ArrowUp'); }
-          else if (engine.pitchDeg() > wantPitch + 0.8) { input.keys.add('ArrowUp'); input.keys.delete('ArrowDown'); }
-          else { input.keys.delete('ArrowDown'); input.keys.delete('ArrowUp'); }
-        }
-      }
-    }
-    const ff = parseFloat(q.get('ff') || '0');
-    if (ff > 0) {
-      const step = 1 / 60;
-      for (let t = 0; t < ff; t += step) {
-        botTick();
-        const cmd = input.update(step);
-        for (const tg of input.takeToggles()) {
-          if (tg === 'gear') engine.gear = !engine.gear;
-          if (tg === 'flaps') engine.flaps = (engine.flaps + 1) % 3;
-        }
-        engine.inPitch = cmd.pitch; engine.inRoll = cmd.roll; engine.inYaw = cmd.yaw;
-        engine.throttle = cmd.throttle; engine.brakes = cmd.brakes;
-        engine.step(step, world, briefing.route.wind);
-        briefing.update(step, engine, world, null);
-        if (engine.crashed || briefing.done) break;
-      }
-      syncVisual(0.5);
-      hud.update(engine, briefing, input);
-    }
-    setInterval(() => { if (flying) botTick(); }, 90);
-  }
-
-  window.addEventListener('DOMContentLoaded', boot);
+  syncAircraftTransform();
+  requestAnimationFrame(animate);
 })();
