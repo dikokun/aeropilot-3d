@@ -23,8 +23,9 @@ Scoring: 300 per ring, landing bonus by touchdown sink (fpm) and grade
 
 ## Controls
 
-W/S pitch · A/D roll · Q/E throttle · F flaps · G gear · B brakes ·
-C camera (chase/cockpit) · R restart · Esc menu
+W/S throttle · ↓/↑ pitch (stick: down = pull up) · ←/→ roll · A/D rudder ·
+F flaps · G gear · B brakes (toggle) · M mouse yoke · C camera (chase/cockpit) ·
+R restart · Esc menu
 
 ## Structure
 

@@ -16,7 +16,19 @@ export const AIRCRAFT = [
   { id: 'rimba', name: 'ST-9 "Rimba"', kind: 'Bush STOL', tag: 'STOL — lepas landas super pendek',
     stall: 23, rotate: 28, thrust: 3.5, drag: 0.0048,
     gearHeight: 2.7, bellyHeight: 1.2, bodyLen: 16, span: 21, scale: 0.88,
-    colorBody: 0xc9a227, colorAccent: 0x2e4a2a, colorTail: 0x2e4a2a }
+    colorBody: 0xc9a227, colorAccent: 0x2e4a2a, colorTail: 0x2e4a2a },
+  { id: 'banteng', name: 'BH-400 "Banteng"', kind: 'Quad Heavy Jet', tag: 'Raksasa quad-jet — landasan panjang wajib',
+    stall: 52, rotate: 60, thrust: 7.8, drag: 0.0027,
+    gearHeight: 3.8, bellyHeight: 1.8, bodyLen: 30, span: 34, scale: 1.35,
+    colorBody: 0xeef0f2, colorAccent: 0x14467c, colorTail: 0x14467c },
+  { id: 'lutung', name: 'LA-5 "Lutung"', kind: 'Amphibian', tag: 'Amfibi ringan — santai buat island hopping',
+    stall: 26, rotate: 31, thrust: 3.1, drag: 0.0052,
+    gearHeight: 2.9, bellyHeight: 1.3, bodyLen: 15, span: 20, scale: 0.92,
+    colorBody: 0x3fa7a0, colorAccent: 0xf2f0ea, colorTail: 0xf2f0ea },
+  { id: 'vyper', name: 'VX-1 "Vyper"', kind: 'Prop Racer', tag: 'Racer mungil — lincah, liar di slalom',
+    stall: 38, rotate: 44, thrust: 5.6, drag: 0.0026,
+    gearHeight: 2.6, bellyHeight: 1.1, bodyLen: 13, span: 17, scale: 0.8,
+    colorBody: 0x23262b, colorAccent: 0x9fd41c, colorTail: 0x9fd41c }
 ];
 export function craftSpec(id) { return AIRCRAFT.find(a => a.id === id) || AIRCRAFT[0]; }
 export const PLANE = AIRCRAFT[0];
@@ -67,6 +79,32 @@ export const MISSIONS = [
     customSpawn: { x: 5650, y: 145, z: -2340, heading: -Math.PI / 2, speed: 61, throttle: 0.45, gearDown: true, flaps: 1 },
     rings: [
       { x: 5150, y: 95, z: -2385, r: 38 }, { x: 4720, y: 52, z: -2400, r: 34 }
+    ] },
+  { id: 'sunset_freight', name: 'MISSION 04 — SUNSET FREIGHT', type: 'full_flight',
+    startAirport: 'emerald_bay', targetAirport: 'coral_atoll',
+    wind: { x: 3, z: 5 },
+    brief: 'Heavy freight run to Coral Atoll: four low sea gates, then land and stop. Watch the crosswind.',
+    rings: [
+      { x: 900, y: 70, z: 350, r: 42 }, { x: 1900, y: 110, z: -250, r: 42 },
+      { x: 2900, y: 90, z: -1100, r: 42 }, { x: 3900, y: 120, z: -1900, r: 40 }
+    ] },
+  { id: 'volcano_orbit', name: 'MISSION 05 — VOLCANO ORBIT', type: 'rings_only',
+    startAirport: 'emerald_bay', forceAirStart: true,
+    wind: { x: -1.5, z: 1.5 },
+    brief: 'Air start. Orbit the volcano the other way round: 8 rings, counter-clockwise, no landing.',
+    rings: [
+      { x: 1950, y: 110, z: -200, r: 35 }, { x: 2650, y: 150, z: -450, r: 35 },
+      { x: 3400, y: 120, z: -650, r: 35 }, { x: 3900, y: 180, z: -1250, r: 35 },
+      { x: 3550, y: 260, z: -1950, r: 35 }, { x: 2950, y: 190, z: -2350, r: 36 },
+      { x: 2300, y: 140, z: -2050, r: 36 }, { x: 1850, y: 230, z: -1350, r: 36 }
+    ] },
+  { id: 'emb_crosswind', name: 'MISSION 06 — EMB CROSSWIND FINAL', type: 'landing_challenge',
+    startAirport: 'emerald_bay', targetAirport: 'emerald_bay',
+    wind: { x: 0, z: 7.5 },
+    brief: 'On final to Emerald Bay RWY 09 with a 15 kt crosswind. Two gates, then put it on the numbers.',
+    customSpawn: { x: -1925, y: 145, z: 60, heading: Math.PI / 2, speed: 61, throttle: 0.45, gearDown: true, flaps: 1 },
+    rings: [
+      { x: -1450, y: 95, z: 30, r: 38 }, { x: -1000, y: 52, z: 10, r: 34 }
     ] },
   { id: 'free_flight', name: 'FREE FLIGHT — ARCHIPELAGO', type: 'sandbox',
     startAirport: 'emerald_bay',

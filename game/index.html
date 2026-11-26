@@ -37,29 +37,31 @@
   .sysrow { display: flex; gap: 8px; align-items: center; font-size: 11px; letter-spacing: 0.18em; color: #9fd4e2; }
   #hud-panel { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); }
   #cross { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255, 220, 150, 0.85); font-size: 15px; }
+  #yoke-dot { position: fixed; top: 50%; left: 50%; width: 11px; height: 11px; border-radius: 50%; background: #ffb340; box-shadow: 0 0 9px rgba(255,179,64,0.85); opacity: 0; transition: opacity 0.2s; z-index: 4; pointer-events: none; }
   /* Menu + debrief */
-  .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 24px; background: linear-gradient(180deg, rgba(6,20,30,0.30) 0%, rgba(6,20,30,0.55) 80%); backdrop-filter: blur(2.5px); z-index: 5; }
-  .craft-label { margin: 16px 0 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.28em; color: #6ec8ec; }
+  .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 8px; background: linear-gradient(180deg, rgba(6,20,30,0.30) 0%, rgba(6,20,30,0.55) 80%); backdrop-filter: blur(2.5px); z-index: 5; }
+  .craft-label { margin: 11px 0 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.28em; color: #6ec8ec; }
   .cards.craft { grid-template-columns: 1fr 1fr 1fr; }
-  .card.craft { padding: 10px 12px; }
+  .card.craft { padding: 7px 10px; }
   .card.craft h3 { font-size: 15px; }
   .card.craft p { min-height: 0; font-size: 12px; }
-  #menu-panel { width: 780px; max-width: 94vw; padding: 26px 30px 20px; text-align: center; pointer-events: auto; border-radius: 18px; background: rgba(10, 24, 38, 0.88); border: 1px solid rgba(110, 190, 220, 0.35); box-shadow: 0 24px 70px rgba(0,0,0,0.5); }
-  #menu-panel .pill { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.3em; color: #6ec8ec; border: 1px solid rgba(110,200,236,0.55); border-radius: 20px; padding: 4px 14px; margin-bottom: 10px; }
-  #menu-panel h1 { font-size: 46px; font-weight: 900; letter-spacing: 0.05em; color: #fff; }
+  #menu-panel { width: 920px; max-width: 96vw; max-height: 97vh; overflow-y: auto; padding: 16px 26px 12px; text-align: center; pointer-events: auto; border-radius: 18px; background: rgba(10, 24, 38, 0.88); border: 1px solid rgba(110, 190, 220, 0.35); box-shadow: 0 24px 70px rgba(0,0,0,0.5); }
+  #menu-cards { grid-template-columns: 1fr 1fr 1fr; }
+  #menu-panel .pill { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.3em; color: #6ec8ec; border: 1px solid rgba(110,200,236,0.55); border-radius: 20px; padding: 4px 14px; margin-bottom: 8px; }
+  #menu-panel h1 { font-size: 40px; font-weight: 900; letter-spacing: 0.05em; color: #fff; }
   #menu-panel h1 span { color: #4db8e8; }
-  #menu-panel .sub { font-size: 14.5px; color: #a9c6d4; margin: 2px 0 18px; }
-  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .card { padding: 13px 16px; cursor: pointer; pointer-events: auto; text-align: center; border-radius: 12px; background: rgba(24, 44, 62, 0.65); border: 1.5px solid rgba(120,170,200,0.25); transition: transform 0.12s, border-color 0.12s, background 0.12s; }
+  #menu-panel .sub { font-size: 14.5px; color: #a9c6d4; margin: 2px 0 12px; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .card { padding: 9px 12px; cursor: pointer; pointer-events: auto; text-align: center; border-radius: 12px; background: rgba(24, 44, 62, 0.65); border: 1.5px solid rgba(120,170,200,0.25); transition: transform 0.12s, border-color 0.12s, background 0.12s; }
   .card:hover { transform: translateY(-2px); }
   .card.selected { border-color: #4db8e8; background: rgba(23, 78, 104, 0.75); box-shadow: 0 0 0 1px #4db8e8, 0 8px 26px rgba(30,120,170,0.35); }
   .card .ctype { font-size: 10.5px; font-weight: 800; letter-spacing: 0.22em; color: #6ec8ec; }
-  .card h3 { font-size: 16.5px; color: #fff; margin: 3px 0 4px; }
-  .card p { font-size: 12.5px; line-height: 1.45; color: #b9cfdb; min-height: 36px; }
+  .card h3 { font-size: 15px; color: #fff; margin: 2px 0 3px; }
+  .card p { font-size: 12px; line-height: 1.35; color: #b9cfdb; min-height: 0; }
   .card .best { font-size: 11.5px; color: #ffb340; font-weight: 800; letter-spacing: 0.08em; margin-top: 4px; }
-  #btn-launch { margin-top: 18px; width: 100%; padding: 14px; font-size: 16.5px; font-weight: 900; letter-spacing: 0.18em; color: #fff; background: linear-gradient(90deg, #0e8fd0, #2f6fe4); border: 0; border-radius: 10px; cursor: pointer; pointer-events: auto; box-shadow: 0 10px 30px rgba(20,110,200,0.45); }
+  #btn-launch { margin-top: 12px; width: 100%; padding: 12px; font-size: 16.5px; font-weight: 900; letter-spacing: 0.18em; color: #fff; background: linear-gradient(90deg, #0e8fd0, #2f6fe4); border: 0; border-radius: 10px; cursor: pointer; pointer-events: auto; box-shadow: 0 10px 30px rgba(20,110,200,0.45); }
   #btn-launch:hover { filter: brightness(1.12); }
-  .keys { margin-top: 16px; display: flex; gap: 13px; justify-content: center; flex-wrap: wrap; font-size: 11.5px; color: #8fb0c0; }
+  .keys { margin-top: 9px; display: flex; gap: 13px; justify-content: center; flex-wrap: wrap; font-size: 11.5px; color: #8fb0c0; }
   .keys b { color: #6ec8ec; border: 1px solid rgba(110,200,236,0.5); border-radius: 5px; padding: 1px 6px; font-weight: 800; margin-right: 4px; }
   #hud-radar { position: absolute; right: 16px; bottom: 16px; border-radius: 50%; }
   #hud-wp { font-size: 11px; color: #7fe3ff; font-weight: 700; }
@@ -98,19 +100,20 @@
     <canvas id="hud-radar" width="150" height="150"></canvas>
     <canvas id="hud-panel" width="300" height="190"></canvas>
     <div id="cross">+</div>
+    <div id="yoke-dot"></div>
   </div>
 
   <div id="menu" class="overlay">
     <div id="menu-panel">
       <div class="pill">3D FLIGHT SIMULATOR</div>
       <h1>AEROPILOT <span>3D</span></h1>
-      <div class="sub">Island Wings — three aircraft, four missions over the Emerald Bay archipelago.</div>
+      <div class="sub">Island Wings — six aircraft, seven flights over the Emerald Bay archipelago.</div>
       <div class="cards" id="menu-cards"></div>
       <div class="craft-label">PILIH PESAWAT · CHOOSE YOUR AIRCRAFT</div>
       <div class="cards craft" id="craft-cards"></div>
       <button id="btn-launch">TAKE OFF / LAUNCH FLIGHT</button>
       <div class="keys">
-        <span><b>W/S</b>Pitch</span><span><b>A/D</b>Roll</span><span><b>Q/E</b>Throttle</span><span><b>F</b>Flaps</span><span><b>G</b>Gear</span><span><b>B</b>Brakes</span><span><b>C</b>Camera</span><span><b>R</b>Restart</span>
+        <span><b>W/S</b>Throttle</span><span><b>↓/↑</b>Pitch</span><span><b>←/→</b>Roll</span><span><b>A/D</b>Rudder</span><span><b>F</b>Flaps</span><span><b>G</b>Gear</span><span><b>B</b>Brakes</span><span><b>M</b>Mouse yoke</span><span><b>C</b>Camera</span><span><b>R</b>Restart</span>
       </div>
     </div>
   </div>

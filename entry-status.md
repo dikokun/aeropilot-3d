@@ -47,3 +47,16 @@
 - Owner feedback 19:13 WIB: "Tambah opsi bisa milih pesawat — masa cuma 1":
   aircraft selection being added (3 craft) as a new build on top of d69b2de;
   NOT submitted until he says so.
+- AIRCRAFT SELECTION BUILT Thu ~19:20 WIB: 3 craft with real per-craft physics
+  specs + liveries — AT-42 "Alis" (turboprop, balanced), CJ-7 "Komet" (jet,
+  stall 44, thrust 6.4), ST-9 "Rimba" (STOL, stall 23). Menu selector row
+  under the mission cards; physics reads p.spec (stall/thrust/drag/heights);
+  HUD altitude now spec-aware. Sim: default Alis 3/3 unchanged; Komet and
+  Rimba each complete island_hopper under the same autopilot (BUTTER 204 fpm
+  in 144 s; BUTTER 111 fpm in 171 s). New HEAD
+  `dfb03d9207f591a69b62e5b1773a76820672e38d` (pushed, remote verified); menu
+  screenshot re-shot (111,940 B); dossier 549,679 B double-run + clean-room
+  identical; bundle rebuilt 2,517,665 B sha256
+  `249acbfa1a9ace1c191bb3b53d294ff246d005a1b3b19858b052918b673a1303`;
+  kit check 15 passed, 0 failed (authorship 93.2%). NOT SUBMITTED — the
+  submitted V6 remains commit d69b2de; this build moves only on his word.

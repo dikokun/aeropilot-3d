@@ -55,8 +55,8 @@ export function stepPlane(p, input, dt, groundYAt, wind) {
     p.z += fz * p.groundSpeed * dt;
     p.y = groundYAt(p.x, p.z) + clearance;
     p.vy = 0;
-    // Steering on the ground at low speed
-    if (p.groundSpeed > 1 && p.groundSpeed < 18) p.heading += input.roll * -0.35 * dt * (p.groundSpeed / 18);
+    // Steering on the ground: rudder pedals (A/D), fading out with speed
+    if (p.groundSpeed > 0.5) p.heading += (input.yaw || 0) * 0.5 * dt * clamp(p.groundSpeed / 8, 0, 1) * clamp(1 - p.groundSpeed / 60, 0.15, 1);
     // Rotation
     if (p.groundSpeed > stall * 0.94 && input.pitch > 0.22) {
       p.onGround = false;
@@ -72,16 +72,20 @@ export function stepPlane(p, input, dt, groundYAt, wind) {
     return ev;
   }
 
-  // Airborne
+  // Airborne. Attitude follows the (smoothed) stick with airflow-scaled
+  // response — heavier at low speed, crisp at cruise — and vertical speed is
+  // damped toward its target instead of snapping (the Gemini original's two
+  // big feel tricks, adapted so the autopilot's tuning still holds).
   p.stopped = false;
+  const airflow = clamp(p.speed / 43, 0.18, 1);
   const turnRate = Math.sin(p.bank) * 1.55;
-  p.heading += turnRate * dt * clamp(p.speed / 40, 0.35, 1.3);
-  const targetBank = clamp(input.roll * -1.02, -1.05, 1.05);
-  p.bank += clamp(targetBank - p.bank, -2.6 * dt, 2.6 * dt);
+  p.heading += (turnRate * clamp(p.speed / 40, 0.35, 1.3) + (input.yaw || 0) * 0.30 * airflow) * dt;
+  const targetBank = clamp((input.roll || 0) * -1.02, -1.05, 1.05);
+  p.bank += clamp(targetBank - p.bank, -3.4 * airflow * dt, 3.4 * airflow * dt);
   const liftFrac = clamp(p.speed / stall, 0, 1.14);
-  const targetPitch = clamp(input.pitch * 0.40, -0.40, 0.42);
+  const targetPitch = clamp((input.pitch || 0) * 0.40, -0.40, 0.42);
   const pitchAuth = clamp(liftFrac, 0.25, 1);
-  p.pitch += clamp(targetPitch - p.pitch, -1.7 * pitchAuth * dt, 1.7 * pitchAuth * dt);
+  p.pitch += clamp(targetPitch - p.pitch, -2.8 * pitchAuth * dt, 2.8 * pitchAuth * dt);
   if (liftFrac < 0.86) p.pitch -= (0.86 - liftFrac) * 0.55 * dt; // stall nose-drop
 
   const thrustA = p.spec.thrust * p.throttle * (1 - p.damage * 0.004);
@@ -89,12 +93,13 @@ export function stepPlane(p, input, dt, groundYAt, wind) {
   const accel = thrustA - dragK * p.speed * p.speed * 0.055 - Math.sin(p.pitch) * 9.81 * clamp(liftFrac, 0, 1);
   p.speed = Math.max(0, p.speed + accel * dt);
 
-  let vy = Math.sin(p.pitch) * p.speed * Math.min(1, liftFrac)
+  let vyT = Math.sin(p.pitch) * p.speed * Math.min(1, liftFrac)
     - 9.81 * (1 - Math.min(1, liftFrac)) * 0.94;
-  if (liftFrac < 1) vy -= (1 - liftFrac) * (1 - liftFrac) * 13; // stall sink
+  if (liftFrac < 1) vyT -= (1 - liftFrac) * (1 - liftFrac) * 13; // stall sink
   const agl = p.y - groundY;
-  if (agl < 13 && vy < 0) vy *= 0.5 + 0.5 * (agl / 13); // ground effect cushion
-  p.vy = vy;
+  if (agl < 13 && vyT < 0) vyT *= 0.5 + 0.5 * (agl / 13); // ground effect cushion
+  p.vy += (vyT - p.vy) * Math.min(1, dt * 3.2); // damped vertical speed
+  const vy = p.vy;
   const fx = Math.sin(p.heading), fz = -Math.cos(p.heading);
   p.x += (fx * p.speed + (wind ? wind.x : 0)) * dt;
   p.z += (fz * p.speed + (wind ? wind.z : 0)) * dt;

@@ -46,9 +46,12 @@ let camMode = 'chase', frozen = false, debShown = false;
 let gpwsLast = 0, simT = 0;
 const keys = new Set();
 let curInput = { roll: 0, pitch: 0 };
+let brakeOn = false, mouseOn = true, mouseNX = 0, mouseNY = 0;
+const smoothed = { pitch: 0, roll: 0, yaw: 0 };
 
 function showMenu() {
   mode = 'menu';
+  document.getElementById('yoke-dot').style.opacity = '0';
   document.body.classList.remove('flying');
   document.getElementById('menu').style.display = 'flex';
   document.getElementById('debrief').style.display = 'none';
@@ -104,6 +107,8 @@ function startMission(id, autopilot) {
   setRings(scene, world, m.rings);
   mode = 'fly';
   frozen = false; debShown = false;
+  brakeOn = false; smoothed.pitch = smoothed.roll = smoothed.yaw = 0;
+  document.getElementById('yoke-dot').style.opacity = mouseOn ? '1' : '0';
   document.body.classList.add('flying');
   document.getElementById('menu').style.display = 'none';
   document.getElementById('debrief').style.display = 'none';
@@ -138,34 +143,60 @@ addEventListener('keydown', (e) => {
   if (mode !== 'fly' || !plane) return;
   if (e.code === 'KeyF') { plane.flaps = (plane.flaps + 1) % 3; Sfx.servo(); }
   if (e.code === 'KeyG') { plane.gearDown = !plane.gearDown; Sfx.servo(); }
+  if (e.code === 'KeyB') brakeOn = !brakeOn;
+  if (e.code === 'KeyM') { mouseOn = !mouseOn; document.getElementById('yoke-dot').style.opacity = mouseOn ? '1' : '0'; }
   if (e.code === 'KeyC') camMode = camMode === 'chase' ? 'cockpit' : 'chase';
   if (e.code === 'KeyR') startMission(st.m.id, useAutopilot);
   if (e.code === 'Escape') { buildMenu(); showMenu(); }
 });
 addEventListener('keyup', (e) => keys.delete(e.code));
+addEventListener('mousemove', (e) => {
+  if (!mouseOn) return;
+  mouseNX = Math.max(-1, Math.min(1, (e.clientX / innerWidth - 0.5) * 2.4));
+  mouseNY = Math.max(-1, Math.min(1, (e.clientY / innerHeight - 0.5) * 2.4));
+  document.getElementById('yoke-dot').style.transform = `translate(calc(-50% + ${mouseNX * 60}px), calc(-50% + ${mouseNY * 60}px))`;
+});
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
 
-function readInput() {
-  const input = { roll: 0, pitch: 0, throttleDelta: 0, brake: keys.has('KeyB') };
-  if (keys.has('KeyW') || keys.has('ArrowUp')) input.pitch += 1;
-  if (keys.has('KeyS') || keys.has('ArrowDown')) input.pitch -= 1;
-  if (keys.has('KeyA') || keys.has('ArrowLeft')) input.roll += 1;
-  if (keys.has('KeyD') || keys.has('ArrowRight')) input.roll -= 1;
-  if (keys.has('KeyE')) input.throttleDelta += 0.55;
-  if (keys.has('KeyQ')) input.throttleDelta -= 0.55;
-  if (keys.has('KeyZ')) input.throttleSet = 1;
-  if (keys.has('KeyX')) input.throttleSet = 0;
-  return input;
+// Control scheme adopted from the Gemini original: W/S throttle, arrows are
+// the stick (Down = pull up, Up = push down), A/D rudder, B brake toggle,
+// M mouse yoke. Raw key state is eased into smoothed deflections so the
+// controls never snap 0 -> 1.
+function readInput(dt) {
+  const raw = { pitch: 0, roll: 0, yaw: 0, throttleDelta: 0 };
+  if (keys.has('ArrowDown')) raw.pitch += 1;
+  if (keys.has('ArrowUp')) raw.pitch -= 1;
+  if (keys.has('ArrowLeft')) raw.roll += 1;
+  if (keys.has('ArrowRight')) raw.roll -= 1;
+  if (keys.has('KeyA')) raw.yaw -= 1;
+  if (keys.has('KeyD')) raw.yaw += 1;
+  if (mouseOn) { raw.pitch += mouseNY; raw.roll -= mouseNX; }
+  raw.pitch = Math.max(-1, Math.min(1, raw.pitch));
+  raw.roll = Math.max(-1, Math.min(1, raw.roll));
+  if (keys.has('KeyW') || keys.has('KeyE')) raw.throttleDelta += 0.55;
+  if (keys.has('KeyS') || keys.has('KeyQ')) raw.throttleDelta -= 0.55;
+  if (keys.has('KeyZ')) raw.throttleSet = 1;
+  if (keys.has('KeyX')) raw.throttleSet = 0;
+  // Auto-release the brakes once you throttle up for takeoff (original's rule)
+  if (plane && plane.onGround && plane.throttle > 0.35 && keys.has('KeyW')) brakeOn = false;
+  const ease = (cur, target) => {
+    const rate = target === 0 ? 6 : 4.5;
+    return cur + Math.max(-rate * dt, Math.min(rate * dt, target - cur));
+  };
+  smoothed.pitch = ease(smoothed.pitch, raw.pitch);
+  smoothed.roll = ease(smoothed.roll, raw.roll);
+  smoothed.yaw = ease(smoothed.yaw, raw.yaw);
+  return { pitch: smoothed.pitch, roll: smoothed.roll, yaw: smoothed.yaw, throttleDelta: raw.throttleDelta, throttleSet: raw.throttleSet, brake: brakeOn };
 }
 
 function stepOnce(dt) {
   simT += dt;
   if (mode !== 'fly' || !plane || frozen) return;
-  const input = useAutopilot ? autopilotStep(ap, st, plane, dt) : readInput();
+  const input = useAutopilot ? autopilotStep(ap, st, plane, dt) : readInput(dt);
   curInput = input;
   const evts = stepPlane(plane, input, dt, surfaceAt, st.m.wind);
   for (const e of evts) {
