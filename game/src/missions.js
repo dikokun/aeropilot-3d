@@ -3,20 +3,20 @@ import { airport, threshold } from './config.js';
 import { createPlane, stallSpeed } from './physics.js';
 import { overRunway } from './geo.js';
 
-export function spawnFor(m) {
+export function spawnFor(m, spec) {
   if (m.customSpawn) {
     const s = m.customSpawn;
-    return createPlane({ x: s.x, y: s.y, z: s.z, heading: s.heading, speed: s.speed, throttle: s.throttle, gearDown: s.gearDown, flaps: s.flaps, onGround: false });
+    return createPlane({ x: s.x, y: s.y, z: s.z, heading: s.heading, speed: s.speed, throttle: s.throttle, gearDown: s.gearDown, flaps: s.flaps, onGround: false }, spec);
   }
   const ap = airport(m.startAirport);
   if (m.forceAirStart) {
-    return createPlane({ x: -200, y: 260, z: 0, heading: Math.PI / 2, speed: 75, throttle: 0.72, gearDown: false, flaps: 0, onGround: false });
+    return createPlane({ x: -200, y: 260, z: 0, heading: Math.PI / 2, speed: 75, throttle: 0.72, gearDown: false, flaps: 0, onGround: false }, spec);
   }
   const dx = Math.sin(ap.landHeading), dz = -Math.cos(ap.landHeading);
   return createPlane({
-    x: ap.x - dx * (ap.length / 2 - 60), y: ap.elev + 3.1, z: ap.z - dz * (ap.length / 2 - 60),
+    x: ap.x - dx * (ap.length / 2 - 60), y: ap.elev + (spec ? spec.gearHeight : 3.1), z: ap.z - dz * (ap.length / 2 - 60),
     heading: ap.landHeading, speed: 0, throttle: 0, gearDown: true, flaps: 0, onGround: true
-  });
+  }, spec);
 }
 
 export function createMission(m) {

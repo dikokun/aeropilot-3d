@@ -25,7 +25,7 @@ export function updateHud(st, p, alert, target, brake) {
     el.wind.textContent = `WIND ${Math.round(Math.hypot(st.m.wind.x, st.m.wind.z) * KT)} KT`;
   }
   el.spd.textContent = fmt(p.speed * KT, 3);
-  el.alt.textContent = fmt(Math.max(0, (p.y - 3.1)) * FT, 5);
+  el.alt.textContent = fmt(Math.max(0, (p.y - p.spec.gearHeight)) * FT, 5);
   const vs = p.onGround ? 0 : p.vy * FPM;
   el.vs.textContent = (vs >= 0 ? '+' : '−') + fmt(Math.abs(vs), 4);
   let hdg = Math.round(p.heading * 180 / Math.PI) % 360; if (hdg < 0) hdg += 360;

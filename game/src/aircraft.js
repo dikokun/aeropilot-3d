@@ -8,10 +8,11 @@ function mat(color, rough = 0.45, metal = 0.35) {
 function box(w, h, d, m) { const x = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); return x; }
 function cyl(rt, rb, h, m, seg = 14) { const x = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), m); return x; }
 
-export function buildAircraft() {
+export function buildAircraft(spec) {
+  const S = spec || PLANE;
   const g = new THREE.Group();
-  const body = mat(PLANE.colorBody), accent = mat(PLANE.colorAccent, 0.4, 0.4),
-    tailM = mat(PLANE.colorTail, 0.45, 0.3), dark = mat(0x1c2733, 0.25, 0.5),
+  const body = mat(S.colorBody), accent = mat(S.colorAccent, 0.4, 0.4),
+    tailM = mat(S.colorTail, 0.45, 0.3), dark = mat(0x1c2733, 0.25, 0.5),
     tyre = mat(0x14161a, 0.9, 0), hub = mat(0xb9c0c7, 0.35, 0.7);
 
   // Fuselage (nose +z), origin at CG
@@ -29,9 +30,9 @@ export function buildAircraft() {
   const ailerons = [];
   for (const s of [-1, 1]) {
     const half = new THREE.Group();
-    const w = box(PLANE.span / 2, 0.32, 2.7, body); w.position.x = s * PLANE.span / 4; half.add(w);
-    const ail = box(4.6, 0.16, 0.85, accent); ail.position.set(s * (PLANE.span / 2 - 2.6), 0, -1.65);
-    const pivot = new THREE.Group(); pivot.position.set(s * (PLANE.span / 2 - 2.6), 0, -1.25); pivot.add(ail); ail.position.set(0, 0, -0.42);
+    const w = box(S.span / 2, 0.32, 2.7, body); w.position.x = s * S.span / 4; half.add(w);
+    const ail = box(4.6, 0.16, 0.85, accent); ail.position.set(s * (S.span / 2 - 2.6), 0, -1.65);
+    const pivot = new THREE.Group(); pivot.position.set(s * (S.span / 2 - 2.6), 0, -1.25); pivot.add(ail); ail.position.set(0, 0, -0.42);
     half.add(pivot); ailerons.push({ pivot, side: s });
     half.position.set(0, -0.55, 0.6);
     half.rotation.z = s * 0.055;
@@ -76,10 +77,11 @@ export function buildAircraft() {
   for (const s of [-1, 1]) {
     const l = new THREE.Mesh(new THREE.SphereGeometry(0.22, 6, 6),
       new THREE.MeshBasicMaterial({ color: s < 0 ? 0xff3524 : 0x2aff5a }));
-    l.position.set(s * PLANE.span / 2, -0.4, 0.6);
+    l.position.set(s * S.span / 2, -0.4, 0.6);
     g.add(l);
   }
   g.userData.parts = { ailerons, rudPivot, elevPivot, gear };
+  g.scale.setScalar(S.scale || 1);
   return g;
 }
 

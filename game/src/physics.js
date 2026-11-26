@@ -14,11 +14,12 @@ export function angDiff(a, b) {
 
 export function stallSpeed(p) {
   const flapFactor = [1, 0.93, 0.85][p.flaps] || 1;
-  return PLANE.stall * flapFactor * (1 + p.damage * 0.002);
+  return p.spec.stall * flapFactor * (1 + p.damage * 0.002);
 }
 
-export function createPlane(spawn) {
+export function createPlane(spawn, spec) {
   return {
+    spec: spec || PLANE,
     x: spawn.x, y: spawn.y, z: spawn.z,
     heading: spawn.heading || 0, pitch: 0, bank: 0,
     speed: spawn.speed || 0, vy: 0, groundSpeed: spawn.speed || 0,
@@ -40,12 +41,12 @@ export function stepPlane(p, input, dt, groundYAt, wind) {
   if (input.throttleSet !== undefined) p.throttle = clamp(input.throttleSet, 0, 1);
   p.gearT = clamp(p.gearT + (p.gearDown ? dt / 2.2 : -dt / 2.2), 0, 1);
   const gearOut = p.gearT > 0.85;
-  const clearance = gearOut ? PLANE.gearHeight : PLANE.bellyHeight;
+  const clearance = gearOut ? p.spec.gearHeight : p.spec.bellyHeight;
   const groundY = groundYAt(p.x, p.z) + clearance;
 
   if (p.onGround) {
-    const thrustA = PLANE.thrust * p.throttle * (1 - p.damage * 0.004);
-    const dragA = PLANE.drag * p.groundSpeed * p.groundSpeed * 0.06 + (input.brake ? 5.2 : 0.3);
+    const thrustA = p.spec.thrust * p.throttle * (1 - p.damage * 0.004);
+    const dragA = p.spec.drag * p.groundSpeed * p.groundSpeed * 0.06 + (input.brake ? 5.2 : 0.3);
     p.groundSpeed = Math.max(0, p.groundSpeed + (thrustA - dragA * Math.sign(p.groundSpeed || 1)) * dt);
     if (p.throttle < 0.03 && p.groundSpeed < 0.05) p.groundSpeed = 0;
     p.speed = p.groundSpeed;
@@ -83,8 +84,8 @@ export function stepPlane(p, input, dt, groundYAt, wind) {
   p.pitch += clamp(targetPitch - p.pitch, -1.7 * pitchAuth * dt, 1.7 * pitchAuth * dt);
   if (liftFrac < 0.86) p.pitch -= (0.86 - liftFrac) * 0.55 * dt; // stall nose-drop
 
-  const thrustA = PLANE.thrust * p.throttle * (1 - p.damage * 0.004);
-  const dragK = PLANE.drag * (1 + p.flaps * 0.38) * (gearOut ? 1.22 : 1);
+  const thrustA = p.spec.thrust * p.throttle * (1 - p.damage * 0.004);
+  const dragK = p.spec.drag * (1 + p.flaps * 0.38) * (gearOut ? 1.22 : 1);
   const accel = thrustA - dragK * p.speed * p.speed * 0.055 - Math.sin(p.pitch) * 9.81 * clamp(liftFrac, 0, 1);
   p.speed = Math.max(0, p.speed + accel * dt);
 

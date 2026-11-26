@@ -13,7 +13,19 @@
 - Kit check: 15 passed, 0 failed — thinking_reproduces 1,110/1,124 authored (98.7%).
 - Dossier: double-run byte-identical; clean-room clone of HEAD byte-identical.
   dossier.json 570,645 B.
-- Sim proof (`node sim6.mjs`): 3/3 scored missions complete under autopilot —
+- UI UPGRADE Thu 2026-11-26 ~19:12 WIB (owner order "Yaudah upgrade" after  running the Gemini original himself and rating its graphics good; Muse ran
+  the original too — its menu/UI polish is genuinely better, its in-flight
+  world flatter): menu rebuilt as a glass panel (pill, 2x2 mission cards with
+  type labels + selected state, LAUNCH button, key-cap chips; click selects,
+  Enter/double-click launches), HUD gains a heading-up radar scope (airport +
+  ring blips), WP distance in NM, vertical THR bar with %, BRAKE chip.
+  New HEAD `d69b2decc070efbde0747636ff61279bbb1d5ecf` (pushed, remote verified);
+  sim still 3/3 (hopper BUTTER 157 fpm, slalom 10/10, final BUTTER 164 fpm);
+  screenshots re-shot (1-menu 93,865 B · 2-takeoff 78,172 B · 3-rings 84,727 B ·
+  4-landing 86,001 B); dossier 522,917 B double-run + clean-room identical;
+  new bundle 2,476,538 B sha256 `8b358a928f16b3dd77aca07f874e35d75c65505b07fa87ddc5f09ff697b9f3cb`;
+  kit check 15 passed, 0 failed (authorship 93.5%). Still NOT SUBMITTED —
+  submit command below now uses commit d69b2de.- Sim proof (`node sim6.mjs`): 3/3 scored missions complete under autopilot —
   island_hopper 158 s, 6/6 rings, BUTTER 157 fpm, stops on Coral RWY;
   canyon_slalom 10/10 rings; final_approach BUTTER 164 fpm in a 15 kt crosswind.
 - Screenshots (1280x800, <=256 KiB): 1-menu 106,321 B · 2-takeoff 85,996 B ·
@@ -22,6 +34,16 @@
   owner's submit word. Submitting moves the final pick off V2 (SKYWARD FURY
   re-submission `01a215d0-f36f-719c-85bf-cc5aa25f3650`).
 - Submit command (from `~/workspace/makefun/flight-game/kit`):
-  `node cli/makefun.mjs submit --competition best-flight-game-20261126-0057 --source ~/workspace/makefun/flight-game6 --commit 19ad551d0a7202be889704bd833712400c93c59b --bundle ~/workspace/makefun/flight6-bundle.tar.gz --keypair ~/workspace/makefun/makefun-keypair.json`
+  `node cli/makefun.mjs submit --competition best-flight-game-20261126-0057 --source ~/workspace/makefun/flight-game6 --commit d69b2decc070efbde0747636ff61279bbb1d5ecf --bundle ~/workspace/makefun/flight6-bundle.tar.gz --keypair ~/workspace/makefun/makefun-keypair.json`
   then move the final pick to the new submission and verify by read-back.
 - Deadline: Sat 2026-11-28 07:57 WIB.
+- SUBMITTED Thu 2026-11-26 19:12 WIB at the owner's word ("Submit V6 jadikan
+  counting"): submission `01a217c5-a317-70b2-9418-b87df722cf3d`, claim code
+  AF-J88XK-G5GQX-AW1AY-DGYMN (this memo only, never chat). Stage "checked"
+  (verified by read-back). The owner then said "Jangan dulu" — the final pick
+  was NOT moved: read-back shows final_pick still = V2 `01a215d0…` (picked
+  2026-11-26T03:06:41Z), so V2 remains the counting entry until he orders the
+  pick moved. Quota after submit: entries made 4, left today 2 of 6.
+- Owner feedback 19:13 WIB: "Tambah opsi bisa milih pesawat — masa cuma 1":
+  aircraft selection being added (3 craft) as a new build on top of d69b2de;
+  NOT submitted until he says so.

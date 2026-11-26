@@ -4,18 +4,22 @@ export const KT = 1.94384;      // m/s -> knots
 export const FPM = 196.85;      // m/s -> feet per minute
 export const FT = 3.28084;      // m -> feet
 
-export const PLANE = {
-  name: 'AT-42 "Alis" Twin Turboprop',
-  stall: 33,            // m/s, clean (64 kt)
-  rotate: 39,           // m/s (76 kt)
-  thrust: 4.35,         // m/s^2 at full throttle, sea level
-  drag: 0.0038,
-  mass: 14500,
-  gearHeight: 3.1,      // CG height on gear
-  bellyHeight: 1.35,    // CG height gear-up
-  bodyLen: 19, span: 24.5,
-  colorBody: 0xf2f0ea, colorAccent: 0x0e7d8a, colorTail: 0xe2703a
-};
+export const AIRCRAFT = [
+  { id: 'alis', name: 'AT-42 "Alis"', kind: 'Twin Turboprop', tag: 'Seimbang — andalan segala misi',
+    stall: 33, rotate: 39, thrust: 4.35, drag: 0.0038,
+    gearHeight: 3.1, bellyHeight: 1.35, bodyLen: 19, span: 24.5, scale: 1,
+    colorBody: 0xf2f0ea, colorAccent: 0x0e7d8a, colorTail: 0xe2703a },
+  { id: 'komet', name: 'CJ-7 "Komet"', kind: 'Twin Jet', tag: 'Jet cepat — rotasi panjang, jelajah tinggi',
+    stall: 44, rotate: 52, thrust: 6.4, drag: 0.0029,
+    gearHeight: 3.3, bellyHeight: 1.5, bodyLen: 21, span: 22, scale: 1.06,
+    colorBody: 0xf5f5f7, colorAccent: 0xb02020, colorTail: 0x22262e },
+  { id: 'rimba', name: 'ST-9 "Rimba"', kind: 'Bush STOL', tag: 'STOL — lepas landas super pendek',
+    stall: 23, rotate: 28, thrust: 3.5, drag: 0.0048,
+    gearHeight: 2.7, bellyHeight: 1.2, bodyLen: 16, span: 21, scale: 0.88,
+    colorBody: 0xc9a227, colorAccent: 0x2e4a2a, colorTail: 0x2e4a2a }
+];
+export function craftSpec(id) { return AIRCRAFT.find(a => a.id === id) || AIRCRAFT[0]; }
+export const PLANE = AIRCRAFT[0];
 
 // headingRad: the direction the runway strip runs (its long axis).
 // landHeading: the heading flown when landing on the named runway.

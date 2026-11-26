@@ -38,7 +38,12 @@
   #hud-panel { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); }
   #cross { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255, 220, 150, 0.85); font-size: 15px; }
   /* Menu + debrief */
-  .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 150px; background: linear-gradient(180deg, rgba(6,20,30,0.30) 0%, rgba(6,20,30,0.55) 80%); backdrop-filter: blur(2.5px); z-index: 5; }
+  .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 24px; background: linear-gradient(180deg, rgba(6,20,30,0.30) 0%, rgba(6,20,30,0.55) 80%); backdrop-filter: blur(2.5px); z-index: 5; }
+  .craft-label { margin: 16px 0 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.28em; color: #6ec8ec; }
+  .cards.craft { grid-template-columns: 1fr 1fr 1fr; }
+  .card.craft { padding: 10px 12px; }
+  .card.craft h3 { font-size: 15px; }
+  .card.craft p { min-height: 0; font-size: 12px; }
   #menu-panel { width: 780px; max-width: 94vw; padding: 26px 30px 20px; text-align: center; pointer-events: auto; border-radius: 18px; background: rgba(10, 24, 38, 0.88); border: 1px solid rgba(110, 190, 220, 0.35); box-shadow: 0 24px 70px rgba(0,0,0,0.5); }
   #menu-panel .pill { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.3em; color: #6ec8ec; border: 1px solid rgba(110,200,236,0.55); border-radius: 20px; padding: 4px 14px; margin-bottom: 10px; }
   #menu-panel h1 { font-size: 46px; font-weight: 900; letter-spacing: 0.05em; color: #fff; }
@@ -99,8 +104,10 @@
     <div id="menu-panel">
       <div class="pill">3D FLIGHT SIMULATOR</div>
       <h1>AEROPILOT <span>3D</span></h1>
-      <div class="sub">Island Wings — twin-turboprop aviation over the Emerald Bay archipelago.</div>
+      <div class="sub">Island Wings — three aircraft, four missions over the Emerald Bay archipelago.</div>
       <div class="cards" id="menu-cards"></div>
+      <div class="craft-label">PILIH PESAWAT · CHOOSE YOUR AIRCRAFT</div>
+      <div class="cards craft" id="craft-cards"></div>
       <button id="btn-launch">TAKE OFF / LAUNCH FLIGHT</button>
       <div class="keys">
         <span><b>W/S</b>Pitch</span><span><b>A/D</b>Roll</span><span><b>Q/E</b>Throttle</span><span><b>F</b>Flaps</span><span><b>G</b>Gear</span><span><b>B</b>Brakes</span><span><b>C</b>Camera</span><span><b>R</b>Restart</span>

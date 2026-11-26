@@ -1,6 +1,6 @@
 // AeroPilot 3D conductor: loop, input, cameras, missions, debrief.
 import * as THREE from 'three';
-import { MISSIONS, mission, airport, threshold, PLANE } from './config.js';
+import { MISSIONS, mission, airport, threshold, PLANE, AIRCRAFT, craftSpec } from './config.js';
 import { buildWorld, setRings, paintRings, paintPapi, surfaceAt } from './world.js';
 import { buildAircraft, poseAircraft } from './aircraft.js';
 import { stepPlane } from './physics.js';
@@ -26,8 +26,16 @@ document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.5, 40000);
 const world = buildWorld(scene);
-const craft = buildAircraft();
+let selectedCraft = 'alis';
+let craft = buildAircraft(craftSpec(selectedCraft));
 scene.add(craft);
+function setCraft(id) {
+  selectedCraft = id;
+  scene.remove(craft);
+  craft = buildAircraft(craftSpec(id));
+  scene.add(craft);
+  if (plane) poseAircraft(craft, plane, null);
+}
 initHud();
 
 const BEST_KEY = 'aeropilot-best-v1';
@@ -45,7 +53,7 @@ function showMenu() {
   document.getElementById('menu').style.display = 'flex';
   document.getElementById('debrief').style.display = 'none';
   const m = mission('island_hopper');
-  plane = spawnFor(m);
+  plane = spawnFor(m, craftSpec(selectedCraft));
   st = null; ap = null;
   setRings(scene, world, []);
   poseAircraft(craft, plane, null);
@@ -70,9 +78,25 @@ function buildMenu() {
   }
 }
 document.getElementById('btn-launch').onclick = () => { Sfx.init(); startMission(selectedId, false); };
+function buildCraftMenu() {
+  const wrap = document.getElementById('craft-cards');
+  wrap.innerHTML = '';
+  for (const a of AIRCRAFT) {
+    const card = document.createElement('div');
+    card.className = 'card craft' + (a.id === selectedCraft ? ' selected' : '');
+    card.dataset.id = a.id;
+    card.innerHTML = `<div class="ctype">${a.kind.toUpperCase()}</div><h3>${a.name}</h3><p>${a.tag}</p>`;
+    card.onclick = () => {
+      setCraft(a.id);
+      wrap.querySelectorAll('.card').forEach((c) => c.classList.toggle('selected', c.dataset.id === selectedCraft));
+      Sfx.init();
+    };
+    wrap.appendChild(card);
+  }
+}
 function startMission(id, autopilot) {
   const m = mission(id);
-  plane = spawnFor(m);
+  plane = spawnFor(m, craftSpec(selectedCraft));
   st = createMission(m);
   ap = createAutopilot();
   useAutopilot = autopilot;
@@ -218,6 +242,7 @@ function frame() {
 }
 
 buildMenu();
+buildCraftMenu();
 if (shot) {
   if (shot.menu) showMenu();
   else {
