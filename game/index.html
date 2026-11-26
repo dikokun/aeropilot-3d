@@ -1,256 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AeroPilot 3D: Island Wings — Flight Simulator</title>
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AeroPilot — Archipelago Flight Simulator</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <canvas id="game-canvas"></canvas>
+<div id="stage"></div>
 
-  <!-- Main Menu Overlay -->
-  <div id="menu-screen" class="overlay active">
-    <div class="menu-card">
-      <div class="badge">3D FLIGHT SIMULATOR</div>
-      <h1>AEROPILOT <span>3D</span></h1>
-      <p class="subtitle">Island Wings — Commercial &amp; Bush Aviation Simulator</p>
-
-      <div class="mission-grid" id="mission-list">
-        <button class="mission-btn selected" data-mission="island_hopper">
-          <div class="m-tag">MISSION 01 • FULL FLIGHT</div>
-          <div class="m-title">Island Hopper (RWY 09 → RWY 27)</div>
-          <div class="m-desc">Take off from Emerald Bay, fly through 6 sky rings, deploy landing gear, and land smoothly at Coral Atoll.</div>
-        </button>
-
-        <button class="mission-btn" data-mission="canyon_slalom">
-          <div class="m-tag">MISSION 02 • TIME TRIAL</div>
-          <div class="m-title">Volcanic Peak &amp; Lighthouse Slalom</div>
-          <div class="m-desc">Master bank turns and throttle control through 10 high-speed aerial gates above the archipelago.</div>
-        </button>
-
-        <button class="mission-btn" data-mission="final_approach">
-          <div class="m-tag">MISSION 03 • LANDING CHALLENGE</div>
-          <div class="m-title">Crosswind Final Approach</div>
-          <div class="m-desc">Start lined up on final approach in gusty crosswinds. Follow PAPI glide slope lights and brake to a stop.</div>
-        </button>
-
-        <button class="mission-btn" data-mission="free_flight">
-          <div class="m-tag">SANDBOX • EXPLORATION</div>
-          <div class="m-title">Free Flight (Archipelago)</div>
-          <div class="m-desc">Practice takeoffs, touch-and-goes, and aerobatics with optional instant Air Start.</div>
-        </button>
-
-        <button class="mission-btn" data-mission="sunset_freight">
-          <div class="m-tag">MISSION 04 • FULL FLIGHT</div>
-          <div class="m-title">Sunset Freight Run</div>
-          <div class="m-desc">Haul cargo low over the sea through 4 gates, then land at Coral Atoll and brake to a stop.</div>
-        </button>
-
-        <button class="mission-btn" data-mission="volcano_orbit">
-          <div class="m-tag">MISSION 05 • TIME TRIAL</div>
-          <div class="m-title">Volcano Orbit (Reverse)</div>
-          <div class="m-desc">Air start. Orbit the volcano counter-clockwise through 8 gates — the slalom, backwards.</div>
-        </button>
-
-        <button class="mission-btn" data-mission="emb_crosswind">
-          <div class="m-tag">MISSION 06 • LANDING CHALLENGE</div>
-          <div class="m-title">Emerald Bay Crosswind Final</div>
-          <div class="m-desc">On final to RWY 09 in a 15 kt crosswind. Two gates, then put it on the numbers at home base.</div>
-        </button>
-      </div>
-
-      <div class="section-label">CHOOSE YOUR AIRCRAFT</div>
-      <div class="craft-grid" id="craft-list">
-        <button class="craft-btn selected" data-craft="alis">
-          <div class="m-title">AT-42 "Alis"</div>
-          <div class="m-desc">Twin Turboprop • Stall 64 kt • Balanced all-rounder</div>
-        </button>
-        <button class="craft-btn" data-craft="komet">
-          <div class="m-title">CJ-7 "Komet"</div>
-          <div class="m-desc">Twin Jet • Stall 86 kt • Fast, long rotation</div>
-        </button>
-        <button class="craft-btn" data-craft="rimba">
-          <div class="m-title">ST-9 "Rimba"</div>
-          <div class="m-desc">Bush STOL • Stall 45 kt • Hops off in metres</div>
-        </button>
-        <button class="craft-btn" data-craft="banteng">
-          <div class="m-title">BH-400 "Banteng"</div>
-          <div class="m-desc">Quad Heavy Jet • Stall 101 kt • Needs the whole runway</div>
-        </button>
-        <button class="craft-btn" data-craft="lutung">
-          <div class="m-title">LA-5 "Lutung"</div>
-          <div class="m-desc">Amphibian • Stall 51 kt • Gentle island hopper</div>
-        </button>
-        <button class="craft-btn" data-craft="vyper">
-          <div class="m-title">VX-1 "Vyper"</div>
-          <div class="m-desc">Prop Racer • Stall 74 kt • Twitchy slalom weapon</div>
-        </button>
-      </div>
-
-      <div class="menu-actions">
-        <label class="toggle-opt">
-          <input type="checkbox" id="opt-airstart" />
-          <span>Start Airborne (2,500 ft)</span>
-        </label>
-        <label class="toggle-opt">
-          <input type="checkbox" id="opt-sound" checked />
-          <span>Cockpit &amp; Engine Audio</span>
-        </label>
-      </div>
-
-      <button id="btn-launch" class="primary-btn">TAKE OFF / LAUNCH FLIGHT</button>
-
-      <div class="controls-strip">
-        <span><b>W/S</b> Throttle</span>
-        <span><b>↑/↓</b> Pitch</span>
-        <span><b>←/→</b> Roll</span>
-        <span><b>A/D</b> Yaw</span>
-        <span><b>G</b> Gear</span>
-        <span><b>F</b> Flaps</span>
-        <span><b>B</b> Brakes</span>
-        <span><b>C</b> Camera</span>
-        <span><b>M</b> Mouse Yoke</span>
-      </div>
+<!-- ======================= HUD ======================= -->
+<div id="hud" style="display:none">
+  <div class="panel" id="mission-panel">
+    <div id="v-mission">—</div>
+    <div class="mission-row">
+      <span id="v-clock">00:00</span>
+      <span class="sep">·</span>
+      <span>RINGS <b id="v-rings">—</b></span>
+      <span class="sep">·</span>
+      <span>SCORE <b id="v-score">0</b></span>
     </div>
+    <div id="v-obj">—</div>
+    <div class="prog-track"><div id="v-prog"></div></div>
   </div>
 
-  <!-- In-Flight Glass Cockpit HUD -->
-  <div id="hud" class="hidden">
-    <!-- Top Bar: Mission Objective & Compass -->
-    <div class="hud-top">
-      <div class="objective-box">
-        <div class="obj-header">
-          <span id="hud-mission-name">MISSION 01</span>
-          <span id="hud-timer">00:00</span>
-        </div>
-        <div id="hud-objective-text">Increase throttle (W) to 100% and rotate at 75 KTS</div>
-        <div class="progress-bar"><div id="hud-progress-fill"></div></div>
-      </div>
-
-      <div class="compass-box">
-        <div class="compass-label">HDG</div>
-        <div id="hud-heading">090°</div>
-        <div id="hud-waypoint-dist">WP 1.4 NM</div>
-      </div>
-
-      <div class="top-controls">
-        <button id="btn-cam" class="hud-pill" title="Switch Camera (C)">CAM: CHASE</button>
-        <button id="btn-mouse" class="hud-pill" title="Toggle Mouse Yoke (M)">MOUSE: OFF</button>
-        <button id="btn-pause" class="hud-pill" title="Pause (P / Esc)">PAUSE</button>
-      </div>
-    </div>
-
-    <!-- Center GPWS Warnings & Mouse Yoke Reticle -->
-    <div id="warning-banner" class="warning-banner hidden">STALL — PITCH DOWN &amp; ADD POWER</div>
-    <div id="mouse-reticle" class="mouse-reticle hidden">
-      <div class="reticle-dot" id="reticle-dot"></div>
-    </div>
-
-    <!-- Bottom Glass Cockpit Panel -->
-    <div class="hud-bottom">
-      <!-- Left: Primary Flight Readouts + Throttle -->
-      <div class="instrument-group">
-        <div class="tape-card">
-          <span class="inst-label">AIRSPEED</span>
-          <span class="inst-val" id="hud-ias">0</span>
-          <span class="inst-unit">KTS</span>
-        </div>
-        <div class="throttle-card">
-          <span class="inst-label">THR</span>
-          <div class="throttle-track">
-            <div class="throttle-fill" id="hud-throttle-fill"></div>
-          </div>
-          <span class="inst-val-sm" id="hud-throttle-val">0%</span>
-        </div>
-      </div>
-
-      <!-- Center: Artificial Horizon & Aircraft Systems -->
-      <div class="center-console">
-        <canvas id="horizon-canvas" width="170" height="170"></canvas>
-        <div class="annunciators">
-          <div id="ann-gear" class="ann active-green">GEAR DN</div>
-          <div id="ann-flaps" class="ann">FLAPS 0°</div>
-          <div id="ann-brake" class="ann active-amber">BRAKE</div>
-          <div id="ann-ground" class="ann active-cyan">ON GND</div>
-        </div>
-      </div>
-
-      <!-- Right: Altitude, VSI & Tactical Radar -->
-      <div class="instrument-group">
-        <div class="tape-card">
-          <span class="inst-label">ALTITUDE</span>
-          <span class="inst-val" id="hud-alt">18</span>
-          <span class="inst-unit">FT</span>
-        </div>
-        <div class="tape-card">
-          <span class="inst-label">VERT SPD</span>
-          <span class="inst-val" id="hud-vsi">0</span>
-          <span class="inst-unit">FPM</span>
-        </div>
-        <div class="radar-card">
-          <canvas id="radar-canvas" width="130" height="130"></canvas>
-        </div>
-      </div>
-    </div>
+  <div class="panel" id="target-panel">
+    <div id="v-arrow">➤</div>
+    <div id="v-dist">—</div>
+    <div class="tiny">NEXT</div>
   </div>
 
-  <!-- Pause Overlay -->
-  <div id="pause-screen" class="overlay hidden">
-    <div class="modal-card">
-      <h2>FLIGHT PAUSED</h2>
-      <p>Adjust controls or resume your flight.</p>
-      <div class="modal-actions">
-        <button id="btn-resume" class="primary-btn">RESUME FLIGHT</button>
-        <button id="btn-restart-pause" class="secondary-btn">RESTART MISSION</button>
-        <button id="btn-menu-pause" class="secondary-btn">MAIN MENU</button>
-      </div>
-    </div>
+  <div class="panel" id="inst-panel">
+    <div class="inst"><label>IAS KT</label><b id="v-ias">0</b></div>
+    <div class="inst"><label>ALT FT</label><b id="v-alt">0</b></div>
+    <div class="inst"><label>V/S FPM</label><b id="v-vsi">0</b></div>
+    <div class="inst"><label>HDG</label><b id="v-hdg">090</b></div>
+    <div class="thr-track"><div id="v-thr"></div></div>
+    <div class="tiny">THROTTLE</div>
   </div>
 
-  <!-- Mission Complete / Crash Overlay -->
-  <div id="result-screen" class="overlay hidden">
-    <div class="modal-card">
-      <div id="result-badge" class="badge">FLIGHT COMPLETE</div>
-      <h2 id="result-title">SMOOTH LANDING!</h2>
-      <p id="result-desc">Touchdown within target zone.</p>
+  <div id="v-warn" style="display:none">STALL</div>
 
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="s-label">FLIGHT TIME</span>
-          <span class="s-val" id="stat-time">01:42</span>
-        </div>
-        <div class="stat-item">
-          <span class="s-label">TOUCHDOWN VSI</span>
-          <span class="s-val" id="stat-vsi">-145 FPM</span>
-        </div>
-        <div class="stat-item">
-          <span class="s-label">CHECKPOINTS</span>
-          <span class="s-val" id="stat-rings">6 / 6</span>
-        </div>
-        <div class="stat-item">
-          <span class="s-label">PILOT SCORE</span>
-          <span class="s-val highlight" id="stat-score">2,850</span>
-        </div>
-      </div>
+  <div id="chips">
+    <span class="chip ok" id="chip-gear">GEAR DOWN</span>
+    <span class="chip" id="chip-flap">FLAPS 0°</span>
+    <span class="chip on" id="chip-brake">BRAKE ON</span>
+    <span class="chip on" id="chip-mouse">MOUSE YOKE</span>
+  </div>
+</div>
 
-      <div class="modal-actions">
-        <button id="btn-retry" class="primary-btn">FLY AGAIN</button>
-        <button id="btn-menu-end" class="secondary-btn">SELECT MISSION</button>
-      </div>
+<!-- ======================= Banner ======================= -->
+<div id="banner" style="display:none">
+  <div class="banner-card">
+    <div id="banner-title">MISSION COMPLETE</div>
+    <div id="banner-body"></div>
+  </div>
+</div>
+
+<!-- ======================= Menu ======================= -->
+<div id="menu">
+  <div class="menu-card">
+    <div class="brand">AEROPILOT</div>
+    <div class="tagline">Archipelago flight simulator — two island airfields, seven routes, six aircraft.</div>
+
+    <div class="section-label">CHOOSE YOUR ROUTE</div>
+    <div id="mission-list"></div>
+
+    <div class="section-label">CHOOSE YOUR AIRCRAFT</div>
+    <div id="craft-grid"></div>
+
+    <button id="btn-launch">LAUNCH FLIGHT</button>
+
+    <div class="controls">
+      <span><b>W / S</b> throttle</span>
+      <span><b>↑ ↓ ← →</b> stick (or mouse yoke)</span>
+      <span><b>A / D</b> rudder</span>
+      <span><b>G</b> gear</span>
+      <span><b>F</b> flaps</span>
+      <span><b>B</b> brakes</span>
+      <span><b>C</b> camera</span>
+      <span><b>M</b> mouse yoke on/off</span>
     </div>
   </div>
+</div>
 
-  <!-- Local Offline Three.js Library -->
-  <script src="vendor/three.min.js"></script>
-  <!-- Modular Game Scripts -->
-  <script src="js/config.js"></script>
-  <script src="js/audio.js"></script>
-  <script src="js/world.js"></script>
-  <script src="js/aircraft.js"></script>
-  <script src="js/physics.js"></script>
-  <script src="js/hud.js"></script>
-  <script src="js/missions.js"></script>
-  <script src="js/main.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/input.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/craft.js"></script>
+<script src="js/briefing.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/cockpit.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
