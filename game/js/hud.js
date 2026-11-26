@@ -1,3 +1,7 @@
+// AeroPilot 3D — HUD: the digital readouts (IAS, ALT, VSI, HDG, waypoint
+// distance, throttle bar), the annunciator chips, the GPWS warning banner,
+// and two canvas instruments — an artificial horizon with a pitch ladder and
+// a heading-up radar scope with islands, runways and the active waypoint.
 class FlightHUD {
   constructor() {
     this.horizonCanvas = document.getElementById('horizon-canvas');
@@ -58,7 +62,7 @@ class FlightHUD {
     this.annBrake.className = 'ann ' + (physics.brakes ? 'active-amber' : '');
     this.annGround.className = 'ann ' + (physics.onGround ? 'active-cyan' : '');
 
-    // GPWS Warnings
+    // GPWS warnings, worst first
     let warning = '';
     if (physics.isStalling) {
       warning = 'STALL WARNING — PITCH DOWN & ADD THROTTLE';
@@ -97,13 +101,13 @@ class FlightHUD {
 
     const pitchOffset = THREE.MathUtils.clamp(pitchDeg * 2.2, -65, 65);
 
-    // Sky & Ground halves
+    // Sky & ground halves
     ctx.fillStyle = '#0284c7';
     ctx.fillRect(-w, -h + pitchOffset, w * 2, h);
     ctx.fillStyle = '#78350f';
     ctx.fillRect(-w, pitchOffset, w * 2, h);
 
-    // Horizon Line
+    // Horizon line
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -111,7 +115,7 @@ class FlightHUD {
     ctx.lineTo(w, pitchOffset);
     ctx.stroke();
 
-    // Pitch Ladder
+    // Pitch ladder
     ctx.font = '9px sans-serif';
     ctx.fillStyle = '#e2e8f0';
     for (let p = -20; p <= 20; p += 10) {
@@ -125,7 +129,7 @@ class FlightHUD {
 
     ctx.restore();
 
-    // Fixed Aircraft Reference Wings
+    // Fixed aircraft reference wings
     ctx.strokeStyle = '#facc15';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
@@ -156,7 +160,7 @@ class FlightHUD {
     ctx.fillStyle = '#071526';
     ctx.fillRect(0, 0, w, h);
 
-    // Range Rings
+    // Range rings
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.2)';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -168,8 +172,7 @@ class FlightHUD {
 
     ctx.save();
     ctx.translate(cx, cy);
-    // Heading-up rotation
-    ctx.rotate(THREE.MathUtils.degToRad(-headingDeg));
+    ctx.rotate(THREE.MathUtils.degToRad(-headingDeg)); // heading-up
 
     // Islands
     ctx.fillStyle = 'rgba(34, 197, 94, 0.35)';
@@ -189,7 +192,7 @@ class FlightHUD {
       ctx.fillRect(rx - (ap.length * scale) / 2, rz - 2, ap.length * scale, 4);
     }
 
-    // Active Waypoint
+    // Active waypoint, clamped to the scope edge
     if (targetPos) {
       const tx = (targetPos.x - physics.position.x) * scale;
       const tz = (targetPos.z - physics.position.z) * scale;
@@ -204,7 +207,7 @@ class FlightHUD {
 
     ctx.restore();
 
-    // Own Aircraft Triangle at Center
+    // Own-aircraft triangle at center
     ctx.fillStyle = '#38bdf8';
     ctx.beginPath();
     ctx.moveTo(cx, cy - 6);

@@ -1,3 +1,7 @@
+// AeroPilot 3D — mission state: ring passes, scoring, objective text and
+// completion. A ring scores when the aircraft comes within its radius + 8 m;
+// a landing mission completes only when every ring is done, the aircraft is
+// on the ground on the target runway, and it has braked below 6 kt.
 class MissionManager {
   constructor() {
     this.currentMission = null;
@@ -75,7 +79,7 @@ class MissionManager {
     const secs = String(Math.floor(this.elapsedTime % 60)).padStart(2, '0');
     this.elTimer.textContent = `${mins}:${secs}`;
 
-    // Check Sky Ring Passes
+    // Ring passes
     if (this.activeRingIndex < this.totalRings) {
       const ring = world.rings[this.activeRingIndex];
       const dist = physics.position.distanceTo(ring.mesh.position);
@@ -90,7 +94,7 @@ class MissionManager {
 
     world.updateRingHighlight(this.activeRingIndex);
 
-    // Objective Text & Completion Evaluation
+    // Objective text & completion
     const m = this.currentMission;
     if (m.type === 'sandbox') {
       this.elObjText.textContent = 'Explore the archipelago or practice touch-and-go landings.';

@@ -1,10 +1,13 @@
+// AeroPilot 3D — simulation configuration.
+// World scale: 1 unit = 1 meter. All speeds stored in m/s, shown in knots.
 window.SIM_CONFIG = {
-  // Unit scale: 1 world unit = 1 meter
   WORLD_SCALE: 1,
   METERS_TO_FEET: 3.28084,
   MPS_TO_KNOTS: 1.94384,
   MPS_TO_FPM: 196.85,
 
+  // The default aircraft (ALIS). Aircraft selection overwrites these fields
+  // from AIRCRAFT_FLEET below when a mission launches.
   AIRCRAFT: {
     mass: 14500,             // kg (Regional Twin-Turboprop Airliner)
     maxThrust: 58000,        // Newtons
@@ -121,8 +124,8 @@ window.SIM_CONFIG = {
   }
 };
 
-// === Aircraft selection (added feature) ===
-// The first entry reproduces the original SIM_CONFIG.AIRCRAFT values exactly.
+// === Aircraft selection ===
+// The first entry reproduces the original AIRCRAFT values exactly.
 window.AIRCRAFT_FLEET = [
   { id: 'alis',    name: 'ALIS — Twin Turboprop',   type: 'REGIONAL AIRLINER', mass: 14500, maxThrust: 58000,  wingArea: 54,  stallSpeedKnots: 64,  takeoffSpeedKnots: 76,  maxSpeedKnots: 245, gearHeight: 3.1, bellyHeight: 1.35, pitchAuthority: 1.15, rollAuthority: 1.75, yawAuthority: 0.65, dragCoeff: 0.00019, scale: 1.0,  bodyColor: 0xf8fafc, stripeColor: 0x0284c7, blurb: 'The original Island Wings airliner. Balanced, forgiving, honest.' },
   { id: 'komet',   name: 'KOMET — Regional Jet',    type: 'JET AIRLINER',      mass: 15000, maxThrust: 98000,  wingArea: 52,  stallSpeedKnots: 86,  takeoffSpeedKnots: 101, maxSpeedKnots: 320, gearHeight: 3.2, bellyHeight: 1.4,  pitchAuthority: 1.0,  rollAuthority: 1.5,  yawAuthority: 0.55, dragCoeff: 0.00016, scale: 1.02, bodyColor: 0xe2e8f0, stripeColor: 0xdc2626, blurb: 'Jet thrust, jet speeds. Needs the whole runway and a steady hand.' },

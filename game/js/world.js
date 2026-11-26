@@ -1,3 +1,8 @@
+// AeroPilot 3D — world building: sky, ocean, the island chain, both
+// airfields (runway markings, edge lights, PAPI, tower, hangar), the mission
+// rings, and the ground-elevation query the physics lands on.
+// Elevation model: runway rectangles first (flat at field elevation), then
+// island ellipses (flat at 4 m), then open ocean at 0 — hitting 0 is water.
 class WorldBuilder {
   constructor(scene) {
     this.scene = scene;
@@ -22,7 +27,7 @@ class WorldBuilder {
     sun.position.set(1800, 2600, 1400);
     this.scene.add(sun);
 
-    // Decorative Volumetric-style Low-Poly Clouds
+    // Low-poly cloud puffs, drifting slowly east
     const cloudMat = new THREE.MeshLambertMaterial({
       color: 0xffffff,
       transparent: true,
@@ -66,7 +71,7 @@ class WorldBuilder {
     const group = new THREE.Group();
     group.position.set(x, 0, z);
 
-    // Sandy Shoal / Beach Base
+    // Sandy shoal / beach base
     const beachGeo = new THREE.CylinderGeometry(radiusX * 0.92, radiusX * 1.05, 4, 24);
     beachGeo.scale(1, 1, radiusZ / radiusX);
     const beachMat = new THREE.MeshLambertMaterial({ color: 0xfde68a });
@@ -74,7 +79,7 @@ class WorldBuilder {
     beach.position.y = 2;
     group.add(beach);
 
-    // Lush Tropical Grass Plateau
+    // Grass plateau
     const grassGeo = new THREE.CylinderGeometry(radiusX * 0.82, radiusX * 0.9, 3, 24);
     grassGeo.scale(1, 1, radiusZ / radiusX);
     const grassMat = new THREE.MeshLambertMaterial({ color: 0x22c55e });
@@ -99,13 +104,13 @@ class WorldBuilder {
     const group = new THREE.Group();
     group.position.set(airport.x, airport.elevation + 0.15, airport.z);
 
-    // Main Asphalt Runway (oriented along X axis)
+    // Asphalt runway, oriented along the X axis
     const rwyGeo = new THREE.BoxGeometry(airport.length, 0.4, airport.width);
     const rwyMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
     const rwy = new THREE.Mesh(rwyGeo, rwyMat);
     group.add(rwy);
 
-    // White Centerline Dashes
+    // White centerline dashes
     const stripeMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
     for (let sx = -airport.length / 2 + 65; sx <= airport.length / 2 - 65; sx += 36) {
       const dash = new THREE.Mesh(new THREE.BoxGeometry(18, 0.45, 1.4), stripeMat);
@@ -113,7 +118,7 @@ class WorldBuilder {
       group.add(dash);
     }
 
-    // Threshold Piano Keys on Both Ends
+    // Threshold piano keys on both ends
     for (const endSign of [-1, 1]) {
       const endX = endSign * (airport.length / 2 - 22);
       for (let kz = -14; kz <= 14; kz += 5.6) {
@@ -123,7 +128,7 @@ class WorldBuilder {
       }
     }
 
-    // Runway Edge Lights
+    // Runway edge lights
     const edgeMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
     for (let lx = -airport.length / 2 + 10; lx <= airport.length / 2 - 10; lx += 45) {
       for (const side of [-1, 1]) {
@@ -133,7 +138,7 @@ class WorldBuilder {
       }
     }
 
-    // PAPI Glide Slope Lights (Approach End)
+    // PAPI glide slope lights at the approach end
     const papiRed = new THREE.MeshBasicMaterial({ color: 0xef4444 });
     const papiWhite = new THREE.MeshBasicMaterial({ color: 0xffffff });
     for (let p = 0; p < 4; p++) {
@@ -145,7 +150,7 @@ class WorldBuilder {
       group.add(box);
     }
 
-    // Control Tower & Hangar
+    // Control tower & hangar
     const towerBase = new THREE.Mesh(
       new THREE.CylinderGeometry(6, 8, 28, 8),
       new THREE.MeshLambertMaterial({ color: 0xe2e8f0 })
@@ -171,7 +176,7 @@ class WorldBuilder {
   }
 
   buildIslandsAndAirports() {
-    // 1. Emerald Bay Island (Home Base)
+    // Emerald Bay island (home base)
     this.createIsland(120, -40, 780, 480, 140, false);
     const ridge1 = new THREE.Mesh(
       new THREE.ConeGeometry(160, 130, 10),
@@ -180,12 +185,12 @@ class WorldBuilder {
     ridge1.position.set(180, 68, -280);
     this.scene.add(ridge1);
 
-    // 2. Volcanic Mid-Archipelago Islands (for Mission 01 & Slalom)
+    // Volcanic mid-archipelago islands (hopper route & slalom)
     this.createIsland(2150, -1150, 520, 460, 290, true);
     this.createIsland(3550, -1850, 420, 390, 220, true);
     this.createIsland(1650, -2100, 360, 340, 190, true);
 
-    // Lighthouse Island
+    // Lighthouse island
     this.createIsland(2950, -520, 240, 240, 60, false);
     const lhTower = new THREE.Mesh(
       new THREE.CylinderGeometry(5, 9, 54, 12),
@@ -201,10 +206,9 @@ class WorldBuilder {
     this.beaconLight.position.set(2950, 60, -520);
     this.scene.add(this.beaconLight);
 
-    // 3. Coral Atoll Island (Destination Airport)
+    // Coral Atoll island (destination airport)
     this.createIsland(4200, -2400, 860, 520, 110, false);
 
-    // Build Both Airports
     for (const ap of window.SIM_CONFIG.AIRPORTS) {
       this.buildAirport(ap);
     }
@@ -224,7 +228,7 @@ class WorldBuilder {
       const mesh = new THREE.Mesh(torusGeo, torusMat);
       mesh.position.set(cfg.x, cfg.y, cfg.z);
 
-      // Orient ring toward next waypoint if available
+      // Face each ring toward the next waypoint
       if (idx < ringConfigs.length - 1) {
         const next = ringConfigs[idx + 1];
         mesh.lookAt(next.x, next.y, next.z);
@@ -259,13 +263,12 @@ class WorldBuilder {
   }
 
   getGroundElevationAt(x, z) {
-    // Check runways first for crisp flat surface
+    // Runways first: a crisp flat surface to land on
     for (const ap of window.SIM_CONFIG.AIRPORTS) {
       if (Math.abs(x - ap.x) <= ap.length * 0.52 && Math.abs(z - ap.z) <= ap.width * 0.65) {
         return ap.elevation;
       }
     }
-    // Check islands
     for (const isl of this.islands) {
       const dx = (x - isl.x) / isl.radiusX;
       const dz = (z - isl.z) / isl.radiusZ;
@@ -273,8 +276,7 @@ class WorldBuilder {
         return isl.elevation;
       }
     }
-    // Open ocean
-    return 0;
+    return 0; // open ocean
   }
 
   isOverRunway(x, z) {

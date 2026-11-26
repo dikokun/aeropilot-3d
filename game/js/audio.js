@@ -1,3 +1,7 @@
+// AeroPilot 3D — synthesized audio: a twin-turboprop hum (two detuned
+// oscillators through a lowpass) plus a band-passed wind rush that tracks
+// airspeed, and short beeps for rings, gear, warnings and touchdown.
+// No audio assets; everything is generated with the Web Audio API.
 class FlightAudioEngine {
   constructor() {
     this.ctx = null;
@@ -18,7 +22,7 @@ class FlightAudioEngine {
 
     this.ctx = new AudioCtx();
 
-    // Twin Turboprop Engine Hum
+    // Twin turboprop engine hum
     this.engineOsc1 = this.ctx.createOscillator();
     this.engineOsc2 = this.ctx.createOscillator();
     const engineFilter = this.ctx.createBiquadFilter();
@@ -42,7 +46,7 @@ class FlightAudioEngine {
     this.engineOsc1.start();
     this.engineOsc2.start();
 
-    // Aerodynamic Wind Rush (Filtered White Noise)
+    // Aerodynamic wind rush (filtered white noise)
     const bufferSize = this.ctx.sampleRate * 2;
     const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = noiseBuffer.getChannelData(0);

@@ -1,3 +1,7 @@
+// AeroPilot 3D — entry point: renderer/scene setup, the menu wiring
+// (mission buttons + the aircraft-selection grid), keyboard and mouse-yoke
+// input with per-frame easing into the physics inputs, the three cameras,
+// and the main loop (step physics, sync the model, run missions, draw HUD).
 (function () {
   const canvas = document.getElementById('game-canvas');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -14,7 +18,7 @@
   const missions = new MissionManager();
   const audio = new FlightAudioEngine();
 
-  // Game & Input State
+  // Game & input state
   let gameState = 'MENU'; // MENU | PLAYING | PAUSED | RESULT
   let selectedMissionId = 'island_hopper';
   let cameraMode = 0; // 0: Chase, 1: Cockpit, 2: Wide Scenic
@@ -26,7 +30,7 @@
 
   const keys = {};
 
-  // UI Elements
+  // UI elements
   const menuScreen = document.getElementById('menu-screen');
   const hudEl = document.getElementById('hud');
   const pauseScreen = document.getElementById('pause-screen');
@@ -34,7 +38,7 @@
   const reticleEl = document.getElementById('mouse-reticle');
   const reticleDot = document.getElementById('reticle-dot');
 
-  // Mission Selection Buttons
+  // Mission selection buttons
   document.querySelectorAll('.mission-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.mission-btn').forEach(b => b.classList.remove('selected'));
@@ -43,7 +47,7 @@
     });
   });
 
-  // Aircraft Selection Buttons (added feature)
+  // Aircraft selection buttons
   let selectedAircraftIndex = 0;
   document.querySelectorAll('.craft-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -59,7 +63,7 @@
     audio.setEnabled(soundOn);
     if (soundOn) audio.init();
 
-    // Aircraft selection (added feature): load the chosen craft's physics + livery.
+    // Aircraft selection: load the chosen craft's physics + livery.
     const craft = window.applyAircraft(selectedAircraftIndex);
     aircraft.setLivery(craft.bodyColor, craft.stripeColor);
     aircraft.setScale(craft.scale);
@@ -129,7 +133,7 @@
     mouseNormY = 0;
   }
 
-  // Button Event Listeners
+  // Button wiring
   document.getElementById('btn-launch').addEventListener('click', startSelectedMission);
   document.getElementById('btn-resume').addEventListener('click', togglePause);
   document.getElementById('btn-restart-pause').addEventListener('click', startSelectedMission);
@@ -150,7 +154,7 @@
   document.getElementById('btn-mouse').addEventListener('click', toggleMouseYoke);
   document.getElementById('btn-pause').addEventListener('click', togglePause);
 
-  // Keyboard Listeners
+  // Keyboard: held keys live in `keys`; one-shot toggles fire on keydown.
   window.addEventListener('keydown', (e) => {
     keys[e.code] = true;
     if (gameState === 'PLAYING') {
@@ -195,7 +199,7 @@
     if (keys['KeyW']) physics.throttle = Math.min(1, physics.throttle + 0.55 * dt);
     if (keys['KeyS']) physics.throttle = Math.max(0, physics.throttle - 0.55 * dt);
 
-    // Auto-release brakes when advancing throttle above 35% on takeoff
+    // Brakes auto-release once the throttle comes up for takeoff
     if (physics.onGround && physics.throttle > 0.35 && keys['KeyW']) {
       physics.brakes = false;
     }
@@ -229,7 +233,7 @@
 
   function updateCamera(dt) {
     if (gameState === 'MENU') {
-      // Scenic slow orbit around Emerald Bay Airport
+      // Scenic slow orbit around Emerald Bay airport
       orbitAngle += dt * 0.14;
       camera.position.set(
         -220 + Math.cos(orbitAngle) * 160,
@@ -241,7 +245,7 @@
     }
 
     if (cameraMode === 0) {
-      // Smooth Chase Camera
+      // Smooth chase camera
       const offset = new THREE.Vector3(0, 6.2, 24).applyQuaternion(physics.quaternion);
       const desiredPos = physics.position.clone().add(offset);
       camera.position.lerp(desiredPos, Math.min(1, dt * 8));
@@ -249,13 +253,13 @@
       const lookAhead = new THREE.Vector3(0, 1.5, -35).applyQuaternion(physics.quaternion);
       camera.lookAt(physics.position.clone().add(lookAhead));
     } else if (cameraMode === 1) {
-      // First-Person Cockpit View
+      // Cockpit view
       const eyeOffset = new THREE.Vector3(0, 1.25, -7.2).applyQuaternion(physics.quaternion);
       camera.position.copy(physics.position).add(eyeOffset);
       const lookTarget = new THREE.Vector3(0, 0.8, -60).applyQuaternion(physics.quaternion);
       camera.lookAt(physics.position.clone().add(lookTarget));
     } else {
-      // Wide Cinematic Side/Rear Orbit
+      // Wide cinematic orbit
       orbitAngle += dt * 0.25;
       const offset = new THREE.Vector3(Math.cos(orbitAngle) * 34, 10, Math.sin(orbitAngle) * 34);
       camera.position.copy(physics.position).add(offset);
@@ -263,7 +267,7 @@
     }
   }
 
-  // Expose debug helper for automated screenshot & playtest scripts
+  // Debug helper for automated screenshot & playtest scripts
   window.__GAME_DEBUG__ = {
     startMission: (id, airStart = false) => {
       selectedMissionId = id || 'island_hopper';

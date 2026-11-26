@@ -9,7 +9,7 @@
 <body>
   <canvas id="game-canvas"></canvas>
 
-  <!-- Main Menu Overlay -->
+  <!-- Main menu: mission cards, the aircraft-selection grid, options, launch -->
   <div id="menu-screen" class="overlay active">
     <div class="menu-card">
       <div class="badge">3D FLIGHT SIMULATOR</div>
@@ -103,9 +103,8 @@
     </div>
   </div>
 
-  <!-- In-Flight Glass Cockpit HUD -->
+  <!-- In-flight glass cockpit HUD -->
   <div id="hud" class="hidden">
-    <!-- Top Bar: Mission Objective & Compass -->
     <div class="hud-top">
       <div class="objective-box">
         <div class="obj-header">
@@ -129,15 +128,14 @@
       </div>
     </div>
 
-    <!-- Center GPWS Warnings & Mouse Yoke Reticle -->
+    <!-- GPWS warning banner & mouse-yoke reticle -->
     <div id="warning-banner" class="warning-banner hidden">STALL — PITCH DOWN &amp; ADD POWER</div>
     <div id="mouse-reticle" class="mouse-reticle hidden">
       <div class="reticle-dot" id="reticle-dot"></div>
     </div>
 
-    <!-- Bottom Glass Cockpit Panel -->
+    <!-- Bottom glass cockpit panel -->
     <div class="hud-bottom">
-      <!-- Left: Primary Flight Readouts + Throttle -->
       <div class="instrument-group">
         <div class="tape-card">
           <span class="inst-label">AIRSPEED</span>
@@ -153,7 +151,6 @@
         </div>
       </div>
 
-      <!-- Center: Artificial Horizon & Aircraft Systems -->
       <div class="center-console">
         <canvas id="horizon-canvas" width="170" height="170"></canvas>
         <div class="annunciators">
@@ -164,7 +161,6 @@
         </div>
       </div>
 
-      <!-- Right: Altitude, VSI & Tactical Radar -->
       <div class="instrument-group">
         <div class="tape-card">
           <span class="inst-label">ALTITUDE</span>
@@ -183,7 +179,7 @@
     </div>
   </div>
 
-  <!-- Pause Overlay -->
+  <!-- Pause overlay -->
   <div id="pause-screen" class="overlay hidden">
     <div class="modal-card">
       <h2>FLIGHT PAUSED</h2>
@@ -196,7 +192,7 @@
     </div>
   </div>
 
-  <!-- Mission Complete / Crash Overlay -->
+  <!-- Mission complete / crash overlay -->
   <div id="result-screen" class="overlay hidden">
     <div class="modal-card">
       <div id="result-badge" class="badge">FLIGHT COMPLETE</div>
@@ -229,9 +225,8 @@
     </div>
   </div>
 
-  <!-- Local Offline Three.js Library -->
+  <!-- Vendored three.js (offline), then the game modules in dependency order -->
   <script src="vendor/three.min.js"></script>
-  <!-- Modular Game Scripts -->
   <script src="js/config.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/world.js"></script>

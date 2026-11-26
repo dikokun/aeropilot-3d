@@ -1,3 +1,8 @@
+// AeroPilot 3D — the aircraft model: a low-poly twin turboprop built from
+// primitives, with articulated control surfaces (ailerons, elevator, rudder,
+// flaps), spinning propellers and a retracting tricycle gear. The forward
+// axis is local -Z. Aircraft selection repaints the two livery materials
+// (setLivery) and rescales the whole airframe (setScale).
 class AircraftModel {
   constructor(scene) {
     this.scene = scene;
@@ -25,7 +30,7 @@ class AircraftModel {
   }
 
   buildAirframe() {
-    // Note: Local aircraft forward axis is -Z (Three.js standard lookAt/quaternion convention)
+    // Local aircraft forward axis is -Z (Three.js lookAt/quaternion convention)
     const bodyMat = new THREE.MeshPhongMaterial({ color: 0xf8fafc, shininess: 70 });
     const stripeMat = new THREE.MeshPhongMaterial({ color: 0x0284c7, shininess: 60 });
     this.bodyMat = bodyMat;
@@ -33,40 +38,40 @@ class AircraftModel {
     const darkMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
     const glassMat = new THREE.MeshPhongMaterial({ color: 0x0f172a, shininess: 120 });
 
-    // Main Fuselage Cylinder along Z
+    // Fuselage cylinder along Z
     const fuseGeo = new THREE.CylinderGeometry(1.45, 1.45, 15.5, 16);
     fuseGeo.rotateX(Math.PI / 2);
     const fuse = new THREE.Mesh(fuseGeo, bodyMat);
     this.root.add(fuse);
 
-    // Nose Cone (-Z)
+    // Nose cone (-Z)
     const noseGeo = new THREE.ConeGeometry(1.45, 3.6, 16);
     noseGeo.rotateX(-Math.PI / 2);
     const nose = new THREE.Mesh(noseGeo, bodyMat);
     nose.position.z = -9.55;
     this.root.add(nose);
 
-    // Cockpit Windshield
+    // Cockpit windshield
     const cockpitGeo = new THREE.BoxGeometry(2.05, 0.85, 2.1);
     const cockpit = new THREE.Mesh(cockpitGeo, glassMat);
     cockpit.position.set(0, 0.85, -7.8);
     cockpit.rotation.x = 0.25;
     this.root.add(cockpit);
 
-    // Tail Cone (+Z)
+    // Tail cone (+Z)
     const tailConeGeo = new THREE.ConeGeometry(1.45, 4.4, 16);
     tailConeGeo.rotateX(Math.PI / 2);
     const tailCone = new THREE.Mesh(tailConeGeo, stripeMat);
     tailCone.position.z = 9.95;
     this.root.add(tailCone);
 
-    // Main Swept Wings
+    // Main wing
     const wingGeo = new THREE.BoxGeometry(23.0, 0.34, 2.9);
     const wing = new THREE.Mesh(wingGeo, bodyMat);
     wing.position.set(0, 0.15, -0.5);
     this.root.add(wing);
 
-    // Wingtip Winglets
+    // Winglets
     for (const side of [-1, 1]) {
       const winglet = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.45, 1.1), stripeMat);
       winglet.position.set(side * 11.5, 0.8, -0.3);
@@ -74,7 +79,7 @@ class AircraftModel {
       this.root.add(winglet);
     }
 
-    // Animated Ailerons & Flaps
+    // Ailerons & flaps (articulated in updateVisuals)
     const ailGeo = new THREE.BoxGeometry(3.4, 0.16, 0.65);
     this.leftAileron = new THREE.Mesh(ailGeo, stripeMat);
     this.leftAileron.position.set(-8.8, 0.15, 1.15);
@@ -91,7 +96,7 @@ class AircraftModel {
       this.flaps.push(flap);
     }
 
-    // Horizontal Stabilizer & Elevator
+    // Horizontal stabilizer & elevator
     const hStab = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.24, 1.5), bodyMat);
     hStab.position.set(0, 0.45, 10.2);
     this.root.add(hStab);
@@ -100,7 +105,7 @@ class AircraftModel {
     this.elevator.position.set(0, 0.45, 11.1);
     this.root.add(this.elevator);
 
-    // Vertical Stabilizer & Rudder
+    // Vertical stabilizer & rudder
     const vStab = new THREE.Mesh(new THREE.BoxGeometry(0.28, 3.8, 2.3), stripeMat);
     vStab.position.set(0, 2.1, 9.8);
     this.root.add(vStab);
@@ -109,7 +114,7 @@ class AircraftModel {
     this.rudder.position.set(0, 2.1, 11.15);
     this.root.add(this.rudder);
 
-    // Twin Wing-Mounted Engine Nacelles & Spinning Propellers
+    // Twin wing-mounted engine nacelles & propellers
     for (const side of [-1, 1]) {
       const nacelle = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.58, 3.4, 12), darkMat);
       nacelle.rotation.x = Math.PI / 2;
@@ -125,11 +130,11 @@ class AircraftModel {
       this.propellers.push(propHub);
     }
 
-    // Retractable Tricycle Landing Gear
+    // Retractable tricycle landing gear
     const gearPositions = [
-      { x: 0,    y: -1.85, z: -6.8 },  // Nose gear
-      { x: -2.6, y: -1.85, z: 0.4 },   // Left main
-      { x: 2.6,  y: -1.85, z: 0.4 }    // Right main
+      { x: 0,    y: -1.85, z: -6.8 },  // nose gear
+      { x: -2.6, y: -1.85, z: 0.4 },   // left main
+      { x: 2.6,  y: -1.85, z: 0.4 }    // right main
     ];
 
     for (const gp of gearPositions) {
@@ -145,7 +150,7 @@ class AircraftModel {
     }
     this.root.add(this.gearGroup);
 
-    // Wingtip Navigation Lights (Red Left, Green Right)
+    // Wingtip navigation lights (red left, green right)
     const redNav = new THREE.Mesh(
       new THREE.SphereGeometry(0.22, 8, 8),
       new THREE.MeshBasicMaterial({ color: 0xef4444 })
@@ -162,25 +167,25 @@ class AircraftModel {
   }
 
   updateVisuals(dt, state) {
-    // Spin propellers proportional to throttle + airspeed
+    // Propellers spin with throttle + airspeed
     const propSpeed = (12 + state.throttle * 48) * dt;
     for (const p of this.propellers) {
       p.rotation.z += propSpeed;
     }
 
-    // Animate control surfaces
+    // Control surfaces follow the inputs
     this.leftAileron.rotation.x = state.rollInput * 0.42;
     this.rightAileron.rotation.x = -state.rollInput * 0.42;
     this.elevator.rotation.x = -state.pitchInput * 0.38;
     this.rudder.rotation.y = state.yawInput * 0.35;
 
-    // Flaps deflection (0, 1, 2)
+    // Flap deflection (settings 0, 1, 2)
     const flapAngle = state.flaps * 0.28;
     for (const f of this.flaps) {
       f.rotation.x = flapAngle;
     }
 
-    // Smooth landing gear retract/extend
+    // Gear retracts/extends by scaling the gear group away
     const targetScaleY = state.gearDown ? 1.0 : 0.01;
     this.gearGroup.scale.y += (targetScaleY - this.gearGroup.scale.y) * Math.min(1, dt * 5);
     this.gearGroup.visible = this.gearGroup.scale.y > 0.05;

@@ -1,3 +1,9 @@
+// AeroPilot 3D — flight physics.
+// The stick commands attitude RATES, scaled by an airflow factor, and a
+// banked wing yaws the nose around (coordinated turn). Vertical speed is not
+// integrated from raw acceleration: it relaxes toward the velocity vector's
+// climb plus a lift-margin term, which is what makes the model feel damped
+// instead of twitchy. Touchdown is judged on sink rate, bank and gear state.
 class FlightPhysics {
   constructor() {
     this.reset();
@@ -81,12 +87,12 @@ class FlightPhysics {
     // Forward vector in world space (-Z in local space)
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.quaternion).normalize();
 
-    // Aerodynamic Forces
+    // Aerodynamic forces
     const flapLiftBonus = this.flaps * 0.16;
     const effectiveStallSpeed = cfg.stallSpeedKnots * (1 - this.flaps * 0.08);
     this.isStalling = !this.onGround && iasKnots < effectiveStallSpeed;
 
-    // Thrust vs Drag
+    // Thrust vs drag (the drag base is per-aircraft: see AIRCRAFT_FLEET)
     const thrustAccel = (this.throttle * cfg.maxThrust) / cfg.mass;
     const baseDragCoeff = (cfg.dragCoeff || 0.00019) + (this.gearDown ? 0.00009 : 0) + (this.flaps * 0.00007);
     const dragAccel = baseDragCoeff * this.speedMps * this.speedMps;
@@ -98,7 +104,7 @@ class FlightPhysics {
     const maxMps = cfg.maxSpeedKnots / window.SIM_CONFIG.MPS_TO_KNOTS;
     this.speedMps = THREE.MathUtils.clamp(this.speedMps, 0, maxMps);
 
-    // Lift & Vertical Motion
+    // Lift & vertical motion
     const liftRatio = Math.pow(iasKnots / (cfg.takeoffSpeedKnots * (1 - flapLiftBonus * 0.5)), 2);
     const noseUpFactor = 1 + Math.max(-0.5, pitchDeg / 22);
     const netVerticalAccel = ((Math.min(1.35, liftRatio) * noseUpFactor) - 1.0) * 9.81;
@@ -123,19 +129,18 @@ class FlightPhysics {
       }
     }
 
-    // Translate position
+    // Translate position (crosswind only bites once airborne)
     const horizForward = new THREE.Vector3(forward.x, 0, forward.z).normalize();
     this.position.x += (horizForward.x * this.speedMps + (this.onGround ? 0 : crosswind.x)) * dt;
     this.position.z += (horizForward.z * this.speedMps + (this.onGround ? 0 : crosswind.z)) * dt;
     this.position.y += this.verticalSpeedMps * dt;
 
-    // Ground & Water Contact Detection
+    // Ground & water contact
     const groundElev = world.getGroundElevationAt(this.position.x, this.position.z);
     const clearance = this.gearDown ? cfg.gearHeight : cfg.bellyHeight;
     const minAllowedY = groundElev + clearance;
 
     if (this.position.y <= minAllowedY) {
-      // Water impact check
       if (groundElev === 0) {
         this.crashed = true;
         this.crashReason = 'DITCHED IN OCEAN — Maintain altitude above water!';

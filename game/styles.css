@@ -1,3 +1,6 @@
+/* AeroPilot 3D — styles: dark glass menu/modals over the 3D canvas, and the
+   in-flight HUD (objective box, compass, tapes, horizon, radar, chips). */
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -224,7 +227,7 @@ h2 {
   border: 1px solid rgba(56, 189, 248, 0.3);
 }
 
-/* HUD Styles */
+/* HUD layout */
 #hud {
   position: fixed;
   inset: 0;
@@ -543,7 +546,7 @@ h2 {
   color: #4ade80;
 }
 
-/* === Aircraft selection (added feature) === */
+/* === Aircraft selection === */
 .section-label {
   font-size: 11px;
   font-weight: 800;
