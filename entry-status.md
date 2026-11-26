@@ -94,3 +94,5 @@
 - Sim (sim8.mjs, engine + PilotInput in node): 11/11 PASS — all 6 scoring missions with Alis, plus Komet/Banteng/Lutung/Rimba hopper, Vyper slalom, Lutung final. Touchdowns -352..-514 fpm, on the runway.
 - Dossier 448,689 B double-run identical. Screenshots re-shot from the player's chase camera (menu / rotation at 92 kt / banking through a slalom ring / crosswind final descending).
 - NOT submitted — awaiting the owner's word on this artifact. Counting entry remains V2.
+- Kit check (bundle flight8-bundle.tar.gz sha256 476639fa..., built from commit 2eacfb89300bb13c9cbd721a426e773070d39603, pushed): 15 PASS / 0 FAIL — thinking_reproduces authored 1374/1631 = 84.2% (bar 30%), unwritten 4.3% (bar 40%). thinking_fresh is a skip-note only (anchor quote appears after the first counted write because this session predates the repo init; the note states the entry is not rejected and pays as any other).
+- Play link: https://raw.githack.com/dikokun/aeropilot-3d/2eacfb89300bb13c9cbd721a426e773070d39603/game/index.html
