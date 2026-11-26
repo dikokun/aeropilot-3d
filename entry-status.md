@@ -47,6 +47,26 @@
 - Owner feedback 19:13 WIB: "Tambah opsi bisa milih pesawat — masa cuma 1":
   aircraft selection being added (3 craft) as a new build on top of d69b2de;
   NOT submitted until he says so.
+- Owner verdict Thu ~19:26 WIB: "pilih AeroPilot aja full, tapi tambah bisa
+  milih pesawat, milih lumayan banyak. Jujur v6 lo jelek banget" + "kontrolnya
+  jelek, liat sistem kontrol AeroPilot 3D" + "mouse gak berguna, gada fitur
+  mouse" + "misinya tambahin". Response built same evening (~19:31 WIB):
+  control scheme adopted from the Gemini original (W/S throttle, arrow stick
+  with Down = pull up, A/D rudder, B brake toggle + auto-release on throttle
+  up, mouse yoke DEFAULT ON with deflection dot, inputs eased/smoothed,
+  airflow-scaled attitude response, vertical speed damped at dt*3.2 — pure
+  rate control was tried first and broke the autopilot 0/3, so the hybrid
+  target model with their feel tricks was kept; sim back to 3/3, BUTTER
+  186/195 fpm); fleet expanded to 6 (adds BH-400 "Banteng" quad heavy,
+  LA-5 "Lutung" amphibian, VX-1 "Vyper" racer — all sim-proven on hopper);
+  missions expanded to 7 flights (adds Sunset Freight, Volcano Orbit,
+  EMB Crosswind Final — all AP-proven, BUTTER 182/194 fpm). New HEAD
+  `ded174cbb863c19abc4aa5df3c3cfc90d975a5b1` (pushed, remote verified); menu
+  re-shot (142,211 B, full panel in frame); dossier 595,046 B double-run +
+  clean-room identical; bundle 2,560,322 B sha256
+  `9e66146c927b906408b541d42f8f73c50f9dca87333c6d199919d3e12df31d16`;
+  kit check 15/0 (authorship 93.6%). NOT SUBMITTED — awaits his word after he
+  playtests the new build (githack link at commit ded174c sent 19:31 WIB).
 - AIRCRAFT SELECTION BUILT Thu ~19:20 WIB: 3 craft with real per-craft physics
   specs + liveries — AT-42 "Alis" (turboprop, balanced), CJ-7 "Komet" (jet,
   stall 44, thrust 6.4), ST-9 "Rimba" (STOL, stall 23). Menu selector row
