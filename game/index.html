@@ -31,25 +31,37 @@
   #hud-adist { font-size: 12.5px; font-weight: 700; color: #ffd9a0; }
   #hud-sys { position: absolute; left: 16px; bottom: 16px; padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 168px; }
   #thr-track { height: 8px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; }
-  #hud-thr { height: 100%; width: 0%; background: #ffb340; }
+  #hud-thr { height: 0%; width: 100%; background: linear-gradient(180deg, #ffb340, #e2703a); }
   .chip { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; padding: 2px 8px; border-radius: 5px; display: inline-block; }
   .chip.ok { color: #53d769; } .chip.dim { color: #8fa8b3; } .chip.warn { color: #ffb340; }
   .sysrow { display: flex; gap: 8px; align-items: center; font-size: 11px; letter-spacing: 0.18em; color: #9fd4e2; }
   #hud-panel { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); }
   #cross { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255, 220, 150, 0.85); font-size: 15px; }
   /* Menu + debrief */
-  .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 170px; background: linear-gradient(180deg, rgba(6,20,30,0.25) 0%, rgba(6,20,30,0.62) 78%); z-index: 5; }
-  .overlay h1 { font-size: 58px; font-weight: 900; letter-spacing: 0.04em; text-shadow: 0 4px 26px rgba(0,0,0,0.55); }
-  .overlay h1 span { color: #ffb340; }
-  .overlay .sub { font-size: 16.5px; color: #cfe8f2; margin: 6px 0 22px; text-shadow: 0 2px 10px rgba(0,0,0,0.6); }
-  .cards { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; max-width: 1060px; padding: 0 12px; }
-  .card { width: 238px; padding: 14px 16px; cursor: pointer; pointer-events: auto; transition: transform 0.12s, border-color 0.12s; }
-  .card:hover { transform: translateY(-3px); border-color: #ffb340; }
-  .card h3 { font-size: 15.5px; color: #ffd9a0; margin-bottom: 6px; }
-  .card p { font-size: 12.5px; line-height: 1.45; color: #cfe0e8; min-height: 54px; }
-  .card .best { font-size: 12px; color: #7fe3ff; font-weight: 700; margin-top: 6px; }
-  .controls { margin-top: 22px; font-size: 12.5px; color: #b9d2dc; letter-spacing: 0.04em; text-align: center; line-height: 1.7; text-shadow: 0 1px 6px rgba(0,0,0,0.7); }
-  .controls b { color: #ffd9a0; }
+  .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 150px; background: linear-gradient(180deg, rgba(6,20,30,0.30) 0%, rgba(6,20,30,0.55) 80%); backdrop-filter: blur(2.5px); z-index: 5; }
+  #menu-panel { width: 780px; max-width: 94vw; padding: 26px 30px 20px; text-align: center; pointer-events: auto; border-radius: 18px; background: rgba(10, 24, 38, 0.88); border: 1px solid rgba(110, 190, 220, 0.35); box-shadow: 0 24px 70px rgba(0,0,0,0.5); }
+  #menu-panel .pill { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.3em; color: #6ec8ec; border: 1px solid rgba(110,200,236,0.55); border-radius: 20px; padding: 4px 14px; margin-bottom: 10px; }
+  #menu-panel h1 { font-size: 46px; font-weight: 900; letter-spacing: 0.05em; color: #fff; }
+  #menu-panel h1 span { color: #4db8e8; }
+  #menu-panel .sub { font-size: 14.5px; color: #a9c6d4; margin: 2px 0 18px; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card { padding: 13px 16px; cursor: pointer; pointer-events: auto; text-align: center; border-radius: 12px; background: rgba(24, 44, 62, 0.65); border: 1.5px solid rgba(120,170,200,0.25); transition: transform 0.12s, border-color 0.12s, background 0.12s; }
+  .card:hover { transform: translateY(-2px); }
+  .card.selected { border-color: #4db8e8; background: rgba(23, 78, 104, 0.75); box-shadow: 0 0 0 1px #4db8e8, 0 8px 26px rgba(30,120,170,0.35); }
+  .card .ctype { font-size: 10.5px; font-weight: 800; letter-spacing: 0.22em; color: #6ec8ec; }
+  .card h3 { font-size: 16.5px; color: #fff; margin: 3px 0 4px; }
+  .card p { font-size: 12.5px; line-height: 1.45; color: #b9cfdb; min-height: 36px; }
+  .card .best { font-size: 11.5px; color: #ffb340; font-weight: 800; letter-spacing: 0.08em; margin-top: 4px; }
+  #btn-launch { margin-top: 18px; width: 100%; padding: 14px; font-size: 16.5px; font-weight: 900; letter-spacing: 0.18em; color: #fff; background: linear-gradient(90deg, #0e8fd0, #2f6fe4); border: 0; border-radius: 10px; cursor: pointer; pointer-events: auto; box-shadow: 0 10px 30px rgba(20,110,200,0.45); }
+  #btn-launch:hover { filter: brightness(1.12); }
+  .keys { margin-top: 16px; display: flex; gap: 13px; justify-content: center; flex-wrap: wrap; font-size: 11.5px; color: #8fb0c0; }
+  .keys b { color: #6ec8ec; border: 1px solid rgba(110,200,236,0.5); border-radius: 5px; padding: 1px 6px; font-weight: 800; margin-right: 4px; }
+  #hud-radar { position: absolute; right: 16px; bottom: 16px; border-radius: 50%; }
+  #hud-wp { font-size: 11px; color: #7fe3ff; font-weight: 700; }
+  #thr-col { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  #thr-track-v { width: 10px; height: 64px; background: rgba(255,255,255,0.15); border-radius: 5px; display: flex; flex-direction: column-reverse; overflow: hidden; }
+  #hud-thr { width: 100%; background: linear-gradient(180deg, #ffb340, #e2703a); }
+  #hud-thrpct { font-size: 10.5px; font-weight: 800; color: #ffd9a0; }
   #debrief { display: none; }
   #deb-card { width: 430px; max-width: 92vw; padding: 22px 26px; text-align: center; pointer-events: auto; }
   #deb-card h2 { font-size: 25px; color: #ffd9a0; margin-bottom: 8px; }
@@ -67,21 +79,32 @@
     <div class="tape glass" id="tape-r"><div class="lab">ALTITUDE</div><div class="val" id="hud-alt">00000</div><div class="unit">FEET · VS <span id="hud-vs">+0000</span></div></div>
     <div id="hud-hdg" class="glass">000°</div>
     <div id="hud-alert"></div>
-    <div id="hud-target"><span id="hud-arrow">▲</span><div id="hud-adist"></div></div>
+    <div id="hud-target"><span id="hud-arrow">▲</span><div id="hud-adist"></div><div id="hud-wp"></div></div>
     <div id="hud-sys" class="glass">
-      <div class="sysrow">THR<div id="thr-track" style="flex:1"><div id="hud-thr"></div></div></div>
-      <div class="sysrow"><span id="hud-gear" class="chip ok">GEAR DOWN</span><span id="hud-flaps" class="chip dim">FLAPS UP</span></div>
+      <div style="display:flex; gap:12px; align-items:flex-end;">
+        <div id="thr-col"><div id="thr-track-v"><div id="hud-thr"></div></div><span id="hud-thrpct">0%</span><span style="font-size:9.5px; letter-spacing:0.2em; color:#9fd4e2;">THR</span></div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <span id="hud-gear" class="chip ok">GEAR DOWN</span>
+          <span id="hud-flaps" class="chip dim">FLAPS UP</span>
+          <span id="hud-brake" class="chip dim">BRAKE OFF</span>
+        </div>
+      </div>
     </div>
+    <canvas id="hud-radar" width="150" height="150"></canvas>
     <canvas id="hud-panel" width="300" height="190"></canvas>
     <div id="cross">+</div>
   </div>
 
   <div id="menu" class="overlay">
-    <h1>AERO<span>PILOT</span> 3D</h1>
-    <div class="sub">Twin-turboprop flight simulator — Emerald Bay to Coral Atoll. Take off, thread the rings, grease the landing.</div>
-    <div class="cards" id="menu-cards"></div>
-    <div class="controls">
-      <b>W/S</b> pitch · <b>A/D</b> roll · <b>Q/E</b> throttle · <b>F</b> flaps · <b>G</b> gear · <b>B</b> brakes · <b>C</b> camera · <b>R</b> restart · <b>Esc</b> menu
+    <div id="menu-panel">
+      <div class="pill">3D FLIGHT SIMULATOR</div>
+      <h1>AEROPILOT <span>3D</span></h1>
+      <div class="sub">Island Wings — twin-turboprop aviation over the Emerald Bay archipelago.</div>
+      <div class="cards" id="menu-cards"></div>
+      <button id="btn-launch">TAKE OFF / LAUNCH FLIGHT</button>
+      <div class="keys">
+        <span><b>W/S</b>Pitch</span><span><b>A/D</b>Roll</span><span><b>Q/E</b>Throttle</span><span><b>F</b>Flaps</span><span><b>G</b>Gear</span><span><b>B</b>Brakes</span><span><b>C</b>Camera</span><span><b>R</b>Restart</span>
+      </div>
     </div>
   </div>
 

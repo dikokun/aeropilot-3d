@@ -50,17 +50,26 @@ function showMenu() {
   setRings(scene, world, []);
   poseAircraft(craft, plane, null);
 }
+const TYPE_LABELS = { full_flight: 'FULL FLIGHT', rings_only: 'TIME TRIAL', landing_challenge: 'LANDING CHALLENGE', sandbox: 'SANDBOX · EXPLORATION' };
+let selectedId = 'island_hopper';
 function buildMenu() {
   const wrap = document.getElementById('menu-cards');
   wrap.innerHTML = '';
   for (const m of MISSIONS) {
     const card = document.createElement('div');
-    card.className = 'card glass';
-    card.innerHTML = `<h3>${m.name}</h3><p>${m.brief}</p><div class="best">${best[m.id] ? 'BEST ' + best[m.id] : 'NOT FLOWN YET'}</div>`;
-    card.onclick = () => { Sfx.init(); startMission(m.id, false); };
+    card.className = 'card' + (m.id === selectedId ? ' selected' : '');
+    card.dataset.id = m.id;
+    card.innerHTML = `<div class="ctype">${TYPE_LABELS[m.type] || 'MISSION'}</div><h3>${m.name.replace(/^MISSION \d+ — /, '')}</h3><p>${m.brief}</p><div class="best">${best[m.id] ? 'BEST ' + best[m.id] : 'NOT FLOWN YET'}</div>`;
+    card.onclick = () => {
+      selectedId = m.id;
+      wrap.querySelectorAll('.card').forEach((c) => c.classList.toggle('selected', c.dataset.id === selectedId));
+      Sfx.init();
+    };
+    card.ondblclick = () => { Sfx.init(); startMission(m.id, false); };
     wrap.appendChild(card);
   }
 }
+document.getElementById('btn-launch').onclick = () => { Sfx.init(); startMission(selectedId, false); };
 function startMission(id, autopilot) {
   const m = mission(id);
   plane = spawnFor(m);
@@ -101,6 +110,7 @@ document.getElementById('deb-menu').onclick = () => { buildMenu(); showMenu(); }
 
 addEventListener('keydown', (e) => {
   keys.add(e.code);
+  if (mode === 'menu' && e.code === 'Enter') { Sfx.init(); startMission(selectedId, false); return; }
   if (mode !== 'fly' || !plane) return;
   if (e.code === 'KeyF') { plane.flaps = (plane.flaps + 1) % 3; Sfx.servo(); }
   if (e.code === 'KeyG') { plane.gearDown = !plane.gearDown; Sfx.servo(); }
@@ -201,7 +211,7 @@ function frame() {
     let target = null;
     if (st.ringIdx < st.m.rings.length) target = st.m.rings[st.ringIdx];
     else if (st.m.targetAirport) { const th = threshold(airport(st.m.targetAirport)); target = { x: th.x, y: airport(st.m.targetAirport).elev + 10, z: th.z }; }
-    updateHud(st, plane, alert, target);
+    updateHud(st, plane, alert, target, !!(curInput && curInput.brake));
   }
   updateCamera(1 / 30);
   renderer.render(scene, camera);

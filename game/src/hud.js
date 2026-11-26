@@ -1,15 +1,16 @@
 // HUD facade: DOM tapes/cards plus the canvas attitude panel.
-import { KT, FPM, FT } from './config.js';
+import { KT, FPM, FT, AIRPORTS } from './config.js';
 
 const el = {};
 export function initHud() {
   for (const id of ['mname', 'timer', 'score', 'obj', 'rings', 'prog', 'spd', 'alt', 'vs', 'hdg',
-    'thr', 'gear', 'flaps', 'alert', 'arrow', 'adist', 'panel', 'wind']) el[id] = document.getElementById('hud-' + id);
+    'thr', 'thrpct', 'gear', 'flaps', 'brake', 'alert', 'arrow', 'adist', 'wp', 'panel', 'wind', 'radar']) el[id] = document.getElementById('hud-' + id);
   el.ctx = el.panel ? el.panel.getContext('2d') : null;
+  el.rctx = el.radar ? el.radar.getContext('2d') : null;
 }
 const fmt = (n, w) => String(Math.max(0, Math.round(n))).padStart(w, '0');
 
-export function updateHud(st, p, alert, target) {
+export function updateHud(st, p, alert, target, brake) {
   if (!el.mname) return;
   el.mname.textContent = st ? st.m.name : '';
   if (st) {
@@ -29,7 +30,12 @@ export function updateHud(st, p, alert, target) {
   el.vs.textContent = (vs >= 0 ? '+' : '−') + fmt(Math.abs(vs), 4);
   let hdg = Math.round(p.heading * 180 / Math.PI) % 360; if (hdg < 0) hdg += 360;
   el.hdg.textContent = fmt(hdg, 3) + '°';
-  el.thr.style.width = Math.round(p.throttle * 100) + '%';
+  el.thr.style.height = Math.round(p.throttle * 100) + '%';
+  if (el.thrpct) el.thrpct.textContent = Math.round(p.throttle * 100) + '%';
+  if (el.brake) {
+    el.brake.textContent = brake ? 'BRAKE ON' : 'BRAKE OFF';
+    el.brake.className = 'chip ' + (brake ? 'warn' : 'dim');
+  }
   el.gear.textContent = p.gearT > 0.85 ? 'GEAR DOWN' : p.gearT < 0.15 ? 'GEAR UP' : 'GEAR MOVING';
   el.gear.className = 'chip ' + (p.gearT > 0.85 ? 'ok' : p.gearT < 0.15 ? 'dim' : 'warn');
   el.flaps.textContent = 'FLAPS ' + ['UP', '1', 'FULL'][p.flaps];
@@ -41,10 +47,40 @@ export function updateHud(st, p, alert, target) {
     const bearing = Math.atan2(dx, -dz);
     let rel = bearing - p.heading;
     el.arrow.style.transform = `rotate(${rel * 180 / Math.PI}deg)`;
-    el.adist.textContent = Math.round(Math.hypot(dx, dz, target.y - p.y)) + ' m';
+    const dist = Math.hypot(dx, dz, target.y - p.y);
+    el.adist.textContent = Math.round(dist) + ' m';
+    if (el.wp) el.wp.textContent = 'WP ' + (dist / 1852).toFixed(1) + ' NM';
     el.arrow.style.opacity = '1';
-  } else el.arrow.style.opacity = '0';
+  } else { el.arrow.style.opacity = '0'; if (el.wp) el.wp.textContent = ''; }
+  drawRadar(st, p);
   drawPanel(p);
+}
+
+// Heading-up radar scope: airports and rings as blips around the aircraft.
+function drawRadar(st, p) {
+  const c = el.rctx; if (!c) return;
+  const S = 150, C = S / 2, R = C - 4, RANGE = 4800;
+  c.clearRect(0, 0, S, S);
+  c.fillStyle = 'rgba(8, 26, 34, 0.82)';
+  c.beginPath(); c.arc(C, C, R, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = 'rgba(110, 200, 236, 0.5)'; c.lineWidth = 1.5;
+  c.beginPath(); c.arc(C, C, R, 0, Math.PI * 2); c.stroke();
+  c.strokeStyle = 'rgba(110, 200, 236, 0.22)'; c.lineWidth = 1;
+  for (const f of [0.66, 0.33]) { c.beginPath(); c.arc(C, C, R * f, 0, Math.PI * 2); c.stroke(); }
+  const blip = (wx, wz, color, size) => {
+    const dx = wx - p.x, dz = wz - p.z;
+    const d = Math.hypot(dx, dz); if (d > RANGE) return;
+    const rel = Math.atan2(dx, -dz) - p.heading;
+    const r = (d / RANGE) * R;
+    c.fillStyle = color;
+    c.beginPath(); c.arc(C + Math.sin(rel) * r, C - Math.cos(rel) * r, size, 0, Math.PI * 2); c.fill();
+  };
+  for (const a of AIRPORTS) blip(a.x, a.z, '#ffffff', 3);
+  if (st) st.m.rings.forEach((r, i) => { if (i >= st.ringsPassed) blip(r.x, r.z, i === st.ringIdx ? '#ffb340' : 'rgba(127,227,255,0.75)', i === st.ringIdx ? 4 : 2.5); });
+  c.fillStyle = '#7fe3ff';
+  c.beginPath(); c.moveTo(C, C - 6); c.lineTo(C + 4.5, C + 5); c.lineTo(C - 4.5, C + 5); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(234,246,251,0.85)';
+  c.font = '700 9px system-ui'; c.textAlign = 'center'; c.fillText('N', C, 12);
 }
 
 function drawPanel(p) {
